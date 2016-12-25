@@ -7,17 +7,14 @@
 
 namespace modgraph
 {
-   struct node;
-
-   using subgraph = std::set<node*>;
+   using subgraph = std::set<int>;
 
    struct node
    {
-      unsigned            value;
-      node *              next;
-      std::vector<node *> prev;
-      subgraph *          subg;
-      node() : value(0), next(nullptr), subg(nullptr) {}
+      int              next;
+      std::vector<int> prev;
+      subgraph *       subg;
+      node() : next(-1), subg(nullptr) {}
    };
 }
 

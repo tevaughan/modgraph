@@ -14,7 +14,6 @@ int main(int argc, char** argv)
    unsigned m;
    iss >> m;
    graph g(m);
-   g.write();
    return 0;
 }
 
