@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 
 #include "node.hpp"
@@ -12,33 +13,35 @@ namespace modgraph
 {
    class graph
    {
+      using subgraph = std::set<int>;
       std::vector<subgraph> subgraphs_;
       std::vector<node>     nodes_;
 
-      // Check previous or next node for connection to subgraph s.
-      void check_node(int off, subgraph &s)
+      // Check previous or next node for connection to subgraph at offset
+      // s_off.
+      void check_node(int n_off, int s_off)
       {
-         node &n = nodes_[off];
-         if (n.subg == nullptr) {
-            traverse(off, s);
-         } else if (n.subg != &s) {
+         node &n = nodes_[n_off];
+         if (n.subg == -1) {
+            traverse(n_off, s_off);
+         } else if (n.subg != s_off) {
             throw "conflict between subgraphs";
          }
       }
 
-      /// Mark node at offset off and every connected node as belonging to
-      /// subgraph s.
-      void traverse(int off, subgraph &s)
+      /// Mark node at offset n_off and every connected node as belonging to
+      /// subgraph at offset s_off.
+      void traverse(int n_off, int s_off)
       {
-         node &n = nodes_[off];
-         n.subg  = &s;
-         s.insert(off);
+         node &n = nodes_[n_off];
+         n.subg  = s_off;
+         subgraphs_[s_off].insert(n_off);
          // Handle next node.
          int const nxt_off = n.next;
-         check_node(nxt_off, s);
+         check_node(nxt_off, s_off);
          // Handle previous nodes.
          for (int const prv_off : n.prev) {
-            check_node(prv_off, s);
+            check_node(prv_off, s_off);
          }
       }
 
@@ -47,13 +50,13 @@ namespace modgraph
       {
          unsigned const m = nodes_.size();
          using namespace std;
-         for (unsigned s = 0; s < subgraphs_.size(); ++s) {
+         for (unsigned s_off = 0; s_off < subgraphs_.size(); ++s_off) {
             ostringstream oss;
-            oss << m << "." << s << ".neato";
+            oss << m << "." << s_off << ".neato";
             ofstream ofs(oss.str());
             ofs << "digraph G {\n";
-            for (int i : subgraphs_[s]) {
-               ofs << "   " << i << " -> " << nodes_[i].next << "\n";
+            for (int n_off : subgraphs_[s_off]) {
+               ofs << "   " << n_off << " -> " << nodes_[n_off].next << "\n";
             }
             ofs << "}\n";
          }
@@ -70,11 +73,12 @@ namespace modgraph
             nodes_[nxt_off].prev.push_back(cur_off);
          }
          // Partition into subgraphs.
-         for (unsigned off = 0; off < m; ++off) {
-            if (nodes_[off].subg == nullptr) {
+         for (unsigned n_off = 0; n_off < m; ++n_off) {
+            if (nodes_[n_off].subg == -1) {
                // Need new subgraph.
+               int const s_off = subgraphs_.size();
                subgraphs_.push_back(subgraph());
-               traverse(off, *subgraphs_.rbegin());
+               traverse(n_off, s_off);
             }
          }
          // Write text files.
