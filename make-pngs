@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if ! test -x modgraph; then make; fi
+
+./modgraph $1
+
+for i in *.neato; do
+  neato -Tpng -O $i
+  rm $i
+done
+
+# EOF

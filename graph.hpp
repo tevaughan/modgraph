@@ -55,6 +55,7 @@ namespace modgraph
             oss << m << "." << s_off << ".neato";
             ofstream ofs(oss.str());
             ofs << "digraph G {\n";
+            ofs << "   overlap=scale\n";
             for (int n_off : subgraphs_[s_off]) {
                ofs << "   " << n_off << " -> " << nodes_[n_off].next << "\n";
             }
