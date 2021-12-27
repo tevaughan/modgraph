@@ -82,7 +82,7 @@ public:
       nodes_[cur_off].next= nxt_off;
       nodes_[nxt_off].prev.push_back(cur_off);
       int const complement= m - cur_off;
-      if(cur_off < complement && complement != m) {
+      if(cur_off <= complement && complement != m) {
         nodes_[cur_off].complement= complement;
       } else {
         nodes_[cur_off].complement= -1;
