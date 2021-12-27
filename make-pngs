@@ -9,4 +9,6 @@ for i in *.neato; do
   rm $i
 done
 
+convert -append $1.?.neato.png $1.png
+
 # EOF

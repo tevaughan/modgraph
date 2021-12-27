@@ -1,19 +1,25 @@
 
-#ifndef MODGRAPH_NODE_HPP
-#define MODGRAPH_NODE_HPP
+/// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 
+#pragma once
 #include <vector>
 
-namespace modgraph
-{
-   struct node
-   {
-      int              next;
-      std::vector<int> prev;
-      int              subg;
-      node() : next(-1), subg(-1) {}
-   };
-}
+namespace modgraph {
 
-#endif // ndef MODGRAPH_NODE_HPP
 
+/// Properties of number n in graph of squares modulo N.
+struct node {
+  int next; ///< Square modulo N.
+  std::vector<int> prev; ///< Inverses of square modulo N.
+  int subg; ///< Subgraph to which node belongs.
+  /// If n < N - n, then `complement` = N - n; otherwise `complement` = -1.
+  int complement; ///< n + complement = N.
+
+  /// Construct uninitialized node.
+  node(): next(-1), subg(-1) {}
+};
+
+
+} // namespace modgraph
+
+// EOF
