@@ -3,6 +3,9 @@
 /// @copyright  2021 Thomas E. Vaughan, all rights reserved.
 
 #include "graph.hpp"
+#include <cmath> // sqrt()
+#include <cstdlib> // rand(), RAND_MAX
+#include <fstream> // ofstream
 
 namespace modgraph {
 
@@ -15,6 +18,7 @@ void graph::check_node(int n_off, int s_off) {
     throw "conflict between subgraphs";
   }
 }
+
 
 void graph::traverse(int n_off, int s_off) {
   node &n= nodes_[n_off];
@@ -79,12 +83,56 @@ void graph::partition() {
 }
 
 
-graph::graph(int m): nodes_(m) {
+void graph::init_loc() {
+  int const m= nodes_.size();
+  for(int i= 0; i < m; ++i) {
+    constexpr double u= 1.0 / RAND_MAX;
+    nodes_[i].pos[0]= lin_size_ * (rand() * u - 0.5);
+    nodes_[i].pos[1]= lin_size_ * (rand() * u - 0.5);
+    nodes_[i].pos[2]= lin_size_ * (rand() * u - 0.5);
+  }
+}
+
+
+using Eigen::Vector3d;
+using std::vector;
+
+
+vector<Vector3d> graph::forces(Vector3d &max) const {
+  max= Vector3d::Zero();
+  int const m= nodes_.size();
+  vector<Vector3d> r(m); // Return-value.
+  for(int i= 0; i < m; ++i) {
+    r[i]= Vector3d::Zero();
+    for(int j= 0; j < m; ++j) {
+      if(i == j) continue;
+      Vector3d const d= nodes_[j].pos - nodes_[i].pos;
+      double const n= d.norm();
+      Vector3d const u= d / n;
+      double const s= n / lin_size_; // Scale of general, attractive force.
+      double const t= 1.0 / n; // Scale of general, repulsive force.
+      double const a= (i + j == m ? 1 : 0); // Specific, attractive force.
+      double b= 0.0;
+      if(nodes_[i].next == j || nodes_[j].next == i) b= 1.0;
+      r[i]+= u * (s * s + a + b - t * t);
+    }
+  }
+  return r;
+}
+
+
+void graph::arrange_3d() {
+  init_loc();
+}
+
+
+graph::graph(int m): nodes_(m), lin_size_(sqrt(m)) {
   if(m < 0) throw "illegal modulus";
   connect(); // Establish all interconnections among nodes.
   partition(); // Partition into subgraphs.
   write_neato(); // Write text files.
 }
+
 
 } // namespace modgraph
 

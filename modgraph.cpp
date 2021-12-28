@@ -1,5 +1,6 @@
 
 #include "graph.hpp"
+#include <iostream> // cerr
 
 using namespace modgraph;
 using namespace std;
