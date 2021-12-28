@@ -1,8 +1,7 @@
 .deps
+*.eps
 modgraph
 *.neato
 *.o
 *.png
-test.eps
-texput.aux
-texput.log
+texput.*

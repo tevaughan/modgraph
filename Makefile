@@ -14,10 +14,12 @@ all : modgraph
 modgraph : $(SRCS:.cpp=.o)
 
 clean :
-	@rm -fv *.neato
-	@rm -fv *.png
-	@rm -fv *.o
+	@rm -fv *.eps
 	@rm -fv modgraph
+	@rm -fv *.neato
+	@rm -fv *.o
+	@rm -fv *.png
+	@rm -fv texput.*
 
 # See
 # 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
