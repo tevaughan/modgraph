@@ -1,3 +1,6 @@
 modgraph
 *.neato
 *.png
+test.eps
+texput.aux
+texput.log
