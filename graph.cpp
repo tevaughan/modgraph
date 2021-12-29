@@ -90,8 +90,6 @@ void graph::write_asy() const {
       char const *color= "";
       if(s == 0) {
         color= "blue";
-      } else if(s == 1) {
-        color= "lightgray";
       } else {
         continue;
       }
@@ -163,14 +161,20 @@ Vector3d graph::force(int i) const {
     double const r= d.norm(); // Distance between i and j.
     double const r2= r * r;
     Vector3d const u= d / r; // Unit-vector from i toward j.
-    // a, b, and c are attractive forces.
+    // a, b, c, and e are attractive forces.
     double const sma= r / sum_modulus_attract_;
     double const a= (i + j == m ? sma * sma : 0.0);
+#if 0
     double const sfa= r / sum_factor_attract_;
     double const b= (((i + j) % m) == 1 ? sfa * sfa : 0.0);
+#else
+    double const b= 0;
+#endif
     double const da= r / direct_attract_;
     double const c= (ni.next == j || nj.next == i ? da * da : 0.0);
-    nf+= u * (univ_attract_ + a + b + c - 1.0 / r2);
+    double const ua= r / univ_attract_;
+    double const e= ua * ua;
+    nf+= u * (a + b + c + e - 1.0 / r2);
   }
   return nf;
 }

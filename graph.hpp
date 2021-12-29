@@ -14,17 +14,13 @@ class graph {
   std::vector<subgraph> subgraphs_; ///< Partition of nodes into subgraphs.
   std::vector<node> nodes_; ///< Collection of all nodes.
 
-  /// Strength of universal attraction, which is constant force between every
-  /// pair of nodes.
-  /// - `univ_attract` should not be negative because there is already
-  ///   universal repulsion.
-  /// - `univ_attract` need be positive only when there exist utterly disjoint
-  ///   subgraphs with no attraction whatsoever between nodes of one and nodes
-  ///   of other.
+  /// Scale of universal attraction between every pair of nodes.
+  /// - `univ_attract` should be larger than unity.
+  /// - `univ_attract` is force proportional to square of distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double univ_attract_= 0.0;
+  double univ_attract_= 160.0;
 
   /// Scale of attraction between pair of nodes connected by a directed edge.
   /// - `direct_attract_` should be larger than unity.
@@ -40,7 +36,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_modulus_attract_= 2.5;
+  double sum_modulus_attract_= 10.0;
 
   /// Scale of attraction between pair of nodes whose sum is factor of modulus.
   /// - `sum_factor_attract_` should be larger than unity.
@@ -48,7 +44,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_factor_attract_= 2.5;
+  double sum_factor_attract_= 40.0;
 
   /// Check previous or next node for connection to subgraph at offset s_off.
   /// - check_node() is called only by traverse().
