@@ -71,18 +71,40 @@ void graph::write_asy() const {
         << "(" << a.pos[0] << "," << a.pos[1] << "," << a.pos[2] << ")"
         << ",red,Billboard);\n";
     int const j= a.next;
-    if(i == j) continue;
-    auto const &b= nodes_[j];
-    auto const ab_u= (b.pos - a.pos).normalized() * 0.1;
-    auto const aa= a.pos + ab_u;
-    auto const bb= b.pos - ab_u;
-    ofs << "draw("
-        << "(" << aa[0] << "," << aa[1] << "," << aa[2] << ")"
-        << "--"
-        << "(" << bb[0] << "," << bb[1] << "," << bb[2] << ")"
-        << ",arrow=Arrow3()"
-        << ",p=gray(0.6)"
-        << ",light=currentlight);\n";
+    if(i != j) {
+      auto const &b= nodes_[j];
+      auto const ab_u= (b.pos - a.pos).normalized() * 0.25;
+      auto const ab= a.pos + ab_u;
+      auto const ba= b.pos - ab_u;
+      ofs << "draw("
+          << "(" << ab[0] << "," << ab[1] << "," << ab[2] << ")"
+          << "--"
+          << "(" << ba[0] << "," << ba[1] << "," << ba[2] << ")"
+          << ",arrow=Arrow3()"
+          << ",p=gray(0.6)"
+          << ",light=currentlight);\n";
+    }
+    for(int k= 0; k < m; ++k) {
+      if(i == k) continue;
+      int const s= (i + k) % m;
+      char const *color= "";
+      if(s == 0) {
+        color= "blue";
+      } else if(s == 1) {
+        color= "lightgray";
+      } else {
+        continue;
+      }
+      auto const &c= nodes_[k];
+      auto const ac_u= (c.pos - a.pos).normalized() * 0.25;
+      auto const ac= a.pos + ac_u;
+      auto const ca= c.pos - ac_u;
+      ofs << "draw("
+          << "(" << ac[0] << "," << ac[1] << "," << ac[2] << ")"
+          << "--"
+          << "(" << ca[0] << "," << ca[1] << "," << ca[2] << ")"
+          << "," << color << ");\n";
+    }
   }
 }
 
@@ -120,9 +142,9 @@ void graph::init_loc() {
   int const m= nodes_.size();
   for(int i= 0; i < m; ++i) {
     constexpr double u= 1.0 / RAND_MAX;
-    nodes_[i].pos[0]= rand() * u - 0.5;
-    nodes_[i].pos[1]= rand() * u - 0.5;
-    nodes_[i].pos[2]= rand() * u - 0.5;
+    nodes_[i].pos[0]= m * (rand() * u - 0.5);
+    nodes_[i].pos[1]= m * (rand() * u - 0.5);
+    nodes_[i].pos[2]= m * (rand() * u - 0.5);
   }
 }
 
@@ -137,14 +159,14 @@ Vector3d graph::force(int i) const {
   for(int j= 0; j < m; ++j) {
     if(i == j) continue;
     auto const &nj= nodes_[j];
-    Vector3d const d= nj.pos - ni.pos;
-    double const nrm= d.norm();
-    Vector3d const u= d / nrm;
-    double const t= 1.0 / nrm; // Square root of repulsive force.
-    // a and b are attractive forces, each for different kind of link.
-    double const a= (i + j == m ? 1.0 : 0.0);
-    double const b= (ni.next == j || nj.next == i ? 1.0 : 0.0);
-    nf+= u * (0.01 + a + b - t * t);
+    Vector3d const d= nj.pos - ni.pos; // Displacement from i to j.
+    double const r= d.norm(); // Distance between i and j.
+    Vector3d const u= d / r; // Unit-vector from i toward j.
+    // a, b, and c are attractive forces.
+    double const a= (i + j == m ? sum_modulus_attract_ : 0.0);
+    double const b= (((i + j) % m) == 1 ? sum_factor_attract_ : 0.0);
+    double const c= (ni.next == j || nj.next == i ? direct_attract_ : 0.0);
+    nf+= u * (univ_attract_ + a + b + c - 1.0 / (r * r));
   }
   return nf;
 }
@@ -177,6 +199,7 @@ void graph::arrange_3d() {
 
 graph::graph(int m): nodes_(m) {
   if(m < 0) throw "illegal modulus";
+  if(univ_attract_ < 0.0) throw "illegal universal attraction";
   connect(); // Establish all interconnections among nodes.
   partition(); // Partition into subgraphs.
   write_neato(); // Write text-files for neato.
