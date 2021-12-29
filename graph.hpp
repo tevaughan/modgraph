@@ -14,16 +14,6 @@ class graph {
   std::vector<subgraph> subgraphs_; ///< Partition of nodes into subgraphs.
   std::vector<node> nodes_; ///< Collection of all nodes.
 
-  /// Linear size across volume in which nodes will be distributed.
-  /// - For simple graph and even for large sections of complicated graph,
-  ///   natural symmetry lies in plane.
-  /// - So making linear size of volume be size of each node (implicitly one)
-  ///   times square root of number of nodes will allow for repulsion between
-  ///   nodes to push them into planar arrangement.
-  /// - Attractive force between one node and every other becomes significant
-  ///   only above scale defined by `size`.
-  double lin_size_;
-
   /// Check previous or next node for connection to subgraph at offset s_off.
   /// - check_node() is called only by traverse().
   /// - `n_off` is previous or next relative to current node in traverse().
@@ -41,26 +31,21 @@ class graph {
   ///               with every node connected to `n_off`.
   void traverse(int n_off, int s_off);
 
-  /// Write text files for neato.
-  void write_neato() const;
-
-  /// Establish all interconnections among nodes.
-  void connect();
 
   /// Partition into subgraphs.
   /// - I might be able to eliminate this after asymptote fully replaces neato.
   void partition();
 
-  /// Choose initial, random location for every node.
-  void init_loc();
+  void connect(); ///< Establish all interconnections among nodes.
+  void init_loc(); ///< Choose initial, random location for every node.
+  void arrange_3d(); ///< Arrange nodes three-dimensionally.
+  void write_neato() const; ///< Write text-files for neato.
+  void write_asy() const; ///< Write text-file for asymptote.
 
-  /// Calculate net force on each node.
-  /// @param   On return, maximum force between any two nodes.
-  /// @return  Net force on each node.
-  std::vector<Eigen::Vector3d> forces(Eigen::Vector3d &max) const;
-
-  /// Arrange nodes three-dimensionally.
-  void arrange_3d();
+  /// Calculate net force on node.
+  /// @param off  Offset of node.
+  /// @return     Net force on node.
+  Eigen::Vector3d force(int off) const;
 
 public:
   /// Construct graphs for modulus m.

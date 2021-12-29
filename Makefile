@@ -14,6 +14,7 @@ all : modgraph
 modgraph : $(SRCS:.cpp=.o)
 
 clean :
+	@rm -fv [0-9]*.asy
 	@rm -fv *.eps
 	@rm -fv modgraph
 	@rm -fv *.neato

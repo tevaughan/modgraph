@@ -1,3 +1,4 @@
+*.asy
 .ccls-cache
 .deps
 *.eps
