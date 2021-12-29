@@ -26,30 +26,29 @@ class graph {
   ///   separated by unit distance.
   double univ_attract_= 0.0;
 
-  /// Strength of attraction between nodes connected by a directed edge.
-  /// - `direct_attract_` should not be negative.
-  /// - `direct_attract_` is constant force independent of distance.
+  /// Scale of attraction between pair of nodes connected by a directed edge.
+  /// - `direct_attract_` should be larger than unity.
+  /// - `direct_attract_` is force proportional to square of distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double direct_attract_= 1.0;
+  double direct_attract_= 2.5;
 
-  /// Strength of attraction between pair of nodes whose sum is modulus.
-  /// - `sum_modulus_attract_` should not be negative.
-  /// - `sum_modulus_attract_` is constant force independent of distance.
+  /// Scale of attraction between pair of nodes whose sum is modulus.
+  /// - `sum_modulus_attract_` should be larger than unity.
+  /// - `sum_modulus_attract_` is force proportional to square of distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_modulus_attract_= 0.50;
+  double sum_modulus_attract_= 2.5;
 
-  /// Strength of attraction between pair of nodes whose sum is factor of
-  /// modulus.
-  /// - `sum_factor_attract_` should not be negative.
-  /// - `sum_factor_attract_` is constant force independent of distance.
+  /// Scale of attraction between pair of nodes whose sum is factor of modulus.
+  /// - `sum_factor_attract_` should be larger than unity.
+  /// - `sum_factor_attract_` is force proportional to square of distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_factor_attract_= 0.25;
+  double sum_factor_attract_= 2.5;
 
   /// Check previous or next node for connection to subgraph at offset s_off.
   /// - check_node() is called only by traverse().

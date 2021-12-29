@@ -161,12 +161,16 @@ Vector3d graph::force(int i) const {
     auto const &nj= nodes_[j];
     Vector3d const d= nj.pos - ni.pos; // Displacement from i to j.
     double const r= d.norm(); // Distance between i and j.
+    double const r2= r * r;
     Vector3d const u= d / r; // Unit-vector from i toward j.
     // a, b, and c are attractive forces.
-    double const a= (i + j == m ? sum_modulus_attract_ : 0.0);
-    double const b= (((i + j) % m) == 1 ? sum_factor_attract_ : 0.0);
-    double const c= (ni.next == j || nj.next == i ? direct_attract_ : 0.0);
-    nf+= u * (univ_attract_ + a + b + c - 1.0 / (r * r));
+    double const sma= r / sum_modulus_attract_;
+    double const a= (i + j == m ? sma * sma : 0.0);
+    double const sfa= r / sum_factor_attract_;
+    double const b= (((i + j) % m) == 1 ? sfa * sfa : 0.0);
+    double const da= r / direct_attract_;
+    double const c= (ni.next == j || nj.next == i ? da * da : 0.0);
+    nf+= u * (univ_attract_ + a + b + c - 1.0 / r2);
   }
   return nf;
 }
