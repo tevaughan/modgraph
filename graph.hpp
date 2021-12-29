@@ -10,6 +10,7 @@ namespace modgraph {
 
 class graph {
   std::vector<node> nodes_; ///< Collection of all nodes.
+  std::vector<int> factors_; ///< Collection of all factors of modulus.
 
   /// Scale of universal attraction between every pair of nodes.
   /// - `univ_attract` should be larger than unity.
@@ -33,7 +34,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_modulus_attract_= 10.0;
+  double sum_modulus_attract_= 5.0;
 
   /// Scale of attraction between pair of nodes whose sum is factor of modulus.
   /// - `sum_factor_attract_` should be larger than unity.
@@ -41,7 +42,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_factor_attract_= 40.0;
+  double sum_factor_attract_= 5.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void init_loc(); ///< Choose initial, random location for every node.
@@ -52,6 +53,10 @@ class graph {
   /// @param off  Offset of node.
   /// @return     Net force on node.
   Eigen::Vector3d force(int off) const;
+
+  /// Find (other than 1 and m) the positive-integer factors of the modulus m.
+  /// @param m  Modulus.
+  void init_factors(int m);
 
 public:
   /// Construct graphs for modulus m.

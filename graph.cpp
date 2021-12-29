@@ -44,8 +44,12 @@ void graph::write_asy() const {
       if(i == k) continue;
       int const s= (i + k) % m;
       char const *color= "";
+      unsigned const fs= factors_.size();
+      bool const f= (fs > 0 && s == factors_[fs - 1] ? true : false);
       if(s == 0) {
         color= "blue";
+      } else if(f) {
+        color= "lightgray";
       } else {
         continue;
       }
@@ -107,11 +111,11 @@ Vector3d graph::force(int i) const {
     // a, b, c, and e are attractive forces.
     double const sma= r / sum_modulus_attract_;
     double const a= (i + j == m ? sma * sma : 0.0);
-#if 0
     double const sfa= r / sum_factor_attract_;
-    double const b= (((i + j) % m) == 1 ? sfa * sfa : 0.0);
-#else
-    double const b= 0;
+    double b= 0;
+#if 1
+    unsigned const fs= factors_.size();
+    if(fs > 0) { b= (((i + j) % m) == factors_[fs - 1] ? sfa * sfa : 0.0); }
 #endif
     double const da= r / direct_attract_;
     double const c= (ni.next == j || nj.next == i ? da * da : 0.0);
@@ -148,9 +152,18 @@ void graph::arrange_3d() {
 }
 
 
+void graph::init_factors(int m) {
+  int const u= m / 2;
+  for(int i= 2; i <= u; ++i) {
+    if(m == m / i * i) { factors_.push_back(i); }
+  }
+}
+
+
 graph::graph(int m): nodes_(m) {
   if(m < 0) throw "illegal modulus";
-  if(univ_attract_ < 0.0) throw "illegal universal attraction";
+  if(univ_attract_ <= 1.0) throw "illegal universal attraction";
+  init_factors(m); // Find factors of m.
   connect(); // Establish all interconnections among nodes.
   arrange_3d(); // Find symmetric positions in 3-d.
   write_asy(); // Write text-file for asymptote.
