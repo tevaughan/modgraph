@@ -10,15 +10,15 @@ namespace modgraph {
 
 class graph {
   std::vector<node> nodes_; ///< Collection of all nodes.
-  std::vector<int> factors_; ///< Collection of all factors of modulus.
+  std::vector<int> factors_; ///< All factors of modulus.
 
-  /// Scale of universal attraction between every pair of nodes.
-  /// - `univ_attract` should be larger than unity.
+  /// Scale of universal attraction between every node and the origin.
+  /// - `univ_attract` should be larger than unity; the larger, the weaker.
   /// - `univ_attract` is force proportional to square of distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double univ_attract_= 160.0;
+  double univ_attract_= 1.0E+06;
 
   /// Scale of attraction between pair of nodes connected by a directed edge.
   /// - `direct_attract_` should be larger than unity.
@@ -42,21 +42,21 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   distance and has unit-value between two nodes whenever they be
   ///   separated by unit distance.
-  double sum_factor_attract_= 5.0;
+  double sum_factor_attract_= 10.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void init_loc(); ///< Choose initial, random location for every node.
   void arrange_3d(); ///< Arrange nodes three-dimensionally.
   void write_asy() const; ///< Write text-file for asymptote.
 
+  /// Initialize list of factors of modulus.
+  /// @param m  Modulus.
+  void init_factors(int m);
+
   /// Calculate net force on node.
   /// @param off  Offset of node.
   /// @return     Net force on node.
   Eigen::Vector3d force(int off) const;
-
-  /// Find (other than 1 and m) the positive-integer factors of the modulus m.
-  /// @param m  Modulus.
-  void init_factors(int m);
 
 public:
   /// Construct graphs for modulus m.

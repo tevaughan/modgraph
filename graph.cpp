@@ -42,13 +42,20 @@ void graph::write_asy() const {
     }
     for(int k= 0; k < m; ++k) {
       if(i == k) continue;
-      int const s= (i + k) % m;
       char const *color= "";
-      unsigned const fs= factors_.size();
-      bool const f= (fs > 0 && s == factors_[fs - 1] ? true : false);
+      int const s= (i + k) % m;
+      bool flag= false;
+#if 0
+      for(auto f: factors_) {
+        if(s == f || s == m - f) {
+          flag= true;
+          break;
+        }
+      }
+#endif
       if(s == 0) {
         color= "blue";
-      } else if(f) {
+      } else if(flag) {
         color= "lightgray";
       } else {
         continue;
@@ -99,8 +106,17 @@ using Eigen::Vector3d;
 
 Vector3d graph::force(int i) const {
   int const m= nodes_.size();
-  Vector3d nf= Vector3d::Zero(); // Net force of node at offset i.
   auto const &ni= nodes_[i];
+  // Initialize to zero the net force on the node at offset i.
+  Vector3d nf= Vector3d::Zero();
+  // First add in the attraction of the node to the origin.
+  // TODO: The next three lines can be abstracted from here and from the top of
+  // the loop; abstracted into a sufficiently general function.
+  Vector3d const d0= -ni.pos; // Displacement from i to origin.
+  double const r0= d0.norm(); // Distance between i and origin.
+  Vector3d const u0= d0 / r0; // Unit-vector from i toward origin.
+  double const ua= r0 / univ_attract_;
+  nf+= u0 * ua * ua;
   for(int j= 0; j < m; ++j) {
     if(i == j) continue;
     auto const &nj= nodes_[j];
@@ -114,14 +130,14 @@ Vector3d graph::force(int i) const {
     double const sfa= r / sum_factor_attract_;
     double b= 0;
 #if 1
-    unsigned const fs= factors_.size();
-    if(fs > 0) { b= (((i + j) % m) == factors_[fs - 1] ? sfa * sfa : 0.0); }
+    int const s= (i + j) % m;
+    for(auto f: factors_) {
+      if(s == f || s == m - f) { b+= sfa * sfa; }
+    }
 #endif
     double const da= r / direct_attract_;
     double const c= (ni.next == j || nj.next == i ? da * da : 0.0);
-    double const ua= r / univ_attract_;
-    double const e= ua * ua;
-    nf+= u * (a + b + c + e - 1.0 / r2);
+    nf+= u * (a + b + c + -1.0 / r2);
   }
   return nf;
 }
@@ -129,33 +145,30 @@ Vector3d graph::force(int i) const {
 
 void graph::arrange_3d() {
   init_loc();
-  double max_norm= 0.0;
-  constexpr double NORM_LIM= 0.001;
-  int off= 0;
+  constexpr double NORM_LIM= 0.01;
   int const m= nodes_.size();
   while(true) {
-    Vector3d const f= force(off);
-    double const norm= f.norm();
-    if(norm > max_norm) max_norm= norm;
-    // Guarantee that motion will be no larger than NORM_LIM.
-    double const scale= (norm <= NORM_LIM ? 1.0 : NORM_LIM / norm);
-    // Move only node on each iteration.
-    nodes_[off].pos+= f * scale;
-    ++off;
-    if(off >= m) {
-      off= 0; // Loop around back to beginning of node-list.
-      std::cout << "max_norm=" << max_norm << std::endl;
-      if(max_norm < 10.0 * NORM_LIM) break;
-      max_norm= 0.0;
+    std::vector<Vector3d> fs;
+    double max_norm= 0.0;
+    for(int off= 0; off < m; ++off) {
+      Vector3d const f= force(off);
+      fs.push_back(f);
+      double const norm= f.norm();
+      if(norm > max_norm) max_norm= norm;
     }
+    std::cout << "max_norm=" << max_norm << std::endl;
+    if(max_norm < 10.0 * NORM_LIM) break;
+    // Guarantee that motion will be no larger than NORM_LIM.
+    double const scale= (max_norm <= NORM_LIM ? 1.0 : NORM_LIM / max_norm);
+    for(int off= 0; off < m; ++off) { nodes_[off].pos+= fs[off] * scale; }
   }
 }
 
 
 void graph::init_factors(int m) {
-  int const u= m / 2;
-  for(int i= 2; i <= u; ++i) {
-    if(m == m / i * i) { factors_.push_back(i); }
+  factors_.push_back(1);
+  for(int i= 2; i < m; ++i) {
+    if(m % i == 0) factors_.push_back(i);
   }
 }
 
@@ -163,7 +176,8 @@ void graph::init_factors(int m) {
 graph::graph(int m): nodes_(m) {
   if(m < 0) throw "illegal modulus";
   if(univ_attract_ <= 1.0) throw "illegal universal attraction";
-  init_factors(m); // Find factors of m.
+  init_factors(m); // Initialize list of factors of m.
+  sum_factor_attract_*= factors_.size();
   connect(); // Establish all interconnections among nodes.
   arrange_3d(); // Find symmetric positions in 3-d.
   write_asy(); // Write text-file for asymptote.
