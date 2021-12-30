@@ -116,7 +116,7 @@ Vector3d graph::force(int i) const {
   double const r0= d0.norm(); // Distance between i and origin.
   Vector3d const u0= d0 / r0; // Unit-vector from i toward origin.
   double const ua= r0 / univ_attract_;
-  nf+= u0 * ua * ua;
+  nf+= u0 * ua;
   for(int j= 0; j < m; ++j) {
     if(i == j) continue;
     auto const &nj= nodes_[j];
@@ -126,17 +126,17 @@ Vector3d graph::force(int i) const {
     Vector3d const u= d / r; // Unit-vector from i toward j.
     // a, b, c, and e are attractive forces.
     double const sma= r / sum_modulus_attract_;
-    double const a= (i + j == m ? sma * sma : 0.0);
+    double const a= (i + j == m ? sma : 0.0);
     double const sfa= r / sum_factor_attract_;
     double b= 0;
 #if 1
     int const s= (i + j) % m;
     for(auto f: factors_) {
-      if(s == f || s == m - f) { b+= sfa * sfa; }
+      if(s == f || s == m - f) { b+= sfa; }
     }
 #endif
     double const da= r / direct_attract_;
-    double const c= (ni.next == j || nj.next == i ? da * da : 0.0);
+    double const c= (ni.next == j || nj.next == i ? da : 0.0);
     nf+= u * (a + b + c + -1.0 / r2);
   }
   return nf;
@@ -165,10 +165,21 @@ void graph::arrange_3d() {
 }
 
 
+bool is_prime(int n) {
+  if(n < 2) return false;
+  for(int i= 2; i < n; ++i) {
+    if(n % i == 0) return false;
+  }
+  return true;
+}
+
+
 void graph::init_factors(int m) {
-  factors_.push_back(1);
-  for(int i= 2; i < m; ++i) {
-    if(m % i == 0) factors_.push_back(i);
+  // Collect only composite factors.
+  // - 4 is least possible composite factor.
+  // - m/2 is greatest possible composite factor.
+  for(int i= 4; i <= m / 2; ++i) {
+    if(m % i == 0 && !is_prime(i)) factors_.push_back(i);
   }
 }
 
