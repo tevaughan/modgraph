@@ -45,10 +45,11 @@ void graph::write_asy() const {
       char const *color= "";
       int const s= (i + k) % m;
       bool flag= false;
-#if 0
+#if 1
       for(auto f: factors_) {
         if(s == f || s == m - f) {
           flag= true;
+          if(i == 22 && k == 28 && m == 30) cout << "flag=true" << endl;
           break;
         }
       }
