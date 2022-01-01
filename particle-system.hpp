@@ -63,6 +63,12 @@ private:
   /// @param j  Offset of other particle.
   auto prop(unsigned i, unsigned j) { return prop_.block(i * 3, j, 3, 1); }
 
+  /// Call move_ to update contribution of particle j toward displacement felt
+  /// by particle i.
+  /// @param i  Offset of one particle.
+  /// @param j  Offset of other particle.
+  void update_prop(unsigned i, unsigned j);
+
   /// Move particle feeling maximum net displacement, and update table of
   /// effects.
   /// @param offset_for_max  Offset of particle feeling maximum displacement.
