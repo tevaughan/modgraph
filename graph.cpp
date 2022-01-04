@@ -19,35 +19,48 @@ using std::cout;
 using std::endl;
 
 
-Vector3d graph::force(unsigned i, unsigned j) const {
+Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   Vector3d f= Vector3d::Zero();
   if(i == j) return f;
-  auto const d= positions_.col(j) - positions_.col(i);
+  auto const d= pos.col(j) - pos.col(i);
   double const r= d.norm();
   // Unit-vector from Node i toward Node j.
   auto const u= d / r;
   // Repulsion by inverse-square law.
-  f+= -u / (r * r);
+  {
+    f+= -u / (r * r);
+    potential_+= 1.0 / r;
+  }
   // Attraction along edge by spring-law.
   unsigned const inext= nodes_[i].next;
   unsigned const jnext= nodes_[j].next;
-  if(inext == j || jnext == i) { f+= u * (r / direct_attract_); }
+  if(inext == j || jnext == i) {
+    f+= u * (r / direct_attract_);
+    potential_+= 0.5 * r * r / direct_attract_;
+  }
   unsigned const M= nodes_.size(); // Modulus.
   // Attraction of complements by spring-law.
   unsigned const sr= (i + j) % M;
-  if(sr == 0 || sr == M - sr) { f+= u * (r / sum_modulus_attract_); }
+  if(sr == 0 || sr == M - sr) {
+    f+= u * (r / sum_modulus_attract_);
+    potential_+= 0.5 * r * r / sum_modulus_attract_;
+  }
   // Attraction of each node to zero by spring-law.
-  if(i == 0 || j == 0) { f+= u * (r / univ_attract_); }
+  if(i == 0 || j == 0) {
+    f+= u * (r / univ_attract_);
+    potential_+= 0.5 * r * r / univ_attract_;
+  }
   return f;
 }
 
 
-void graph::init_forces() {
+void graph::net_force_and_pot(Matrix3Xd const &positions) {
   unsigned const M= nodes_.size(); // Modulus.
   forces_= MatrixXd::Zero(3 * M, M);
+  potential_= 0.0;
   for(unsigned i= 0; i < M; ++i) {
     for(unsigned j= i + 1; j < M; ++j) {
-      Vector3d const f= force(i, j);
+      Vector3d const f= force_and_pot(i, j, positions);
       forces_.block(i * 3, j, 3, 1)= f;
       forces_.block(j * 3, i, 3, 1)= -f;
     }
@@ -216,7 +229,7 @@ void graph::minimize() {
 #endif
 #endif
 
-  init_forces();
+  net_force_and_pot(positions_);
   constexpr double MAX_STEP= 0.01;
   constexpr double STOPPING_CRITERION= 10.0 * MAX_STEP;
   unsigned const M= nodes_.size();
@@ -227,7 +240,7 @@ void graph::minimize() {
     for(unsigned i= 0; i < M; ++i) {
       positions_.block(0, i, 3, 1)+= scale * force(i);
     }
-    init_forces();
+    net_force_and_pot(positions_);
   }
 }
 

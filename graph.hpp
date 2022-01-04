@@ -37,18 +37,16 @@ class graph {
   /// - net_forces_ is initialized by init_forces().
   MatrixXd net_forces_;
 
-  /// Magnitude of greatest net force on any node.
-  double max_force_mag_;
+  double potential_; ///< Scalar potential whose gradient produces forces.
+  double max_force_mag_; ///< Magnitude of greatest net force on any node.
+  unsigned max_force_off_; ///< Offset of node experiencing maximum force.
 
-  /// Offset of node experiencing maximum force.
-  unsigned max_force_off_;
-
-  /// Compute force felt by Node i from Node j.
-  /// - force() is called by init_forces() to initialize force_.
+  /// Compute force felt by Node i from Node j, and update potential_.
+  /// - force() is called by net_force_and_pot().
   /// @param i  Offset of one node.
   /// @param j  Offset of other node.
   /// @return   Force felt by Node i from Node j.
-  Vector3d force(unsigned i, unsigned j) const;
+  Vector3d force_and_pot(unsigned i, unsigned j, Matrix3Xd const &positions);
 
   /// Net force on Node i.
   /// - This should be called only after init_forces() has been called.
@@ -56,8 +54,13 @@ class graph {
   /// @return   Net force on node.
   auto force(unsigned i) const { return net_forces_.block(i * 3, 0, 3, 1); }
 
-  /// Initialize force felt by each node from every other node.
-  void init_forces();
+  /// Compute net force felt by each node from every other node, and compute
+  /// overall potential of system.
+  /// - `calc_net_force_and_pot()` takes argument (and does not directly use
+  ///   positions_) because gsl keeps its own record of positions during
+  ///   minimization.
+  /// @param positions  3xN matrix for position of each of N particles.
+  void net_force_and_pot(Matrix3Xd const &positions);
 
   /// Function that GSL will minimize.
   /// - Data in `x` have same structure as data in positions_.
