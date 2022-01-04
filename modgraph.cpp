@@ -14,6 +14,7 @@ int main(int argc, char** argv)
    istringstream iss(argv[1]);
    unsigned m;
    iss >> m;
+   cout << "contructing graph" << endl;
    graph g(m);
    return 0;
 }

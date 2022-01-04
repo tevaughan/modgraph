@@ -1,7 +1,8 @@
 
 CC := g++
 CXX := g++
-CXXFLAGS := -Wall -std=c++17
+CXXFLAGS := -g -Wall -std=c++17
+LDLIBS := -lgsl
 
 # See
 # 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
