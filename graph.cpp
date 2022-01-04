@@ -95,32 +95,9 @@ Map<MatrixXd const> pos_map(gsl_vector const *x) {
 
 double graph::f_min(gsl_vector const *x, void *p) {
   auto const positions= pos_map(x);
-  auto const &g= *(graph *)p;
-  int const m= g.nodes_.size(); // Modulus.
-  double v= 0.0; // Value to be minimized.
-  for(int i= 0; i < positions.cols(); ++i) {
-    auto const pi= positions.col(i); // Position of ith node.
-    Vector3d di= Vector3d::Zero(); // Change in position of ith node.
-    for(int j= 0; j < positions.cols(); ++j) {
-      if(i == j) continue;
-      auto const pj= positions.col(j); // Position of jth node.
-      auto const rvec= pj - pi; // Displacement from i to j.
-      double const r= rvec.norm(); // Magnitude of displacement.
-      auto const u= rvec / r;
-      di+= -u / (r * r); // Universal repulsion by 1/r^2.
-      if(g.nodes_[i].next == j) {
-        di+= u * 0.5; // Attraction along edge.
-      }
-      if((i + j) % m == 0) {
-        di+= u * 0.1; // Attraction to complement.
-      }
-      if(i == 0 || j == 0) {
-        di+= u * 0.02; // Attraction to zero.
-      }
-    }
-    v+= di.norm();
-  }
-  return v;
+  auto &g= *(graph *)p;
+  g.net_force_and_pot(positions);
+  return g.potential_;
 }
 
 
@@ -128,35 +105,41 @@ double graph::f_min(gsl_vector const *x, void *p) {
 constexpr double h= 0.001;
 
 
-void graph::df(gsl_vector const *x, void *p, gsl_vector *g) {
-  double const f0= f_min(x, p); // Current value of quantity to minimize.
-  static VectorXd xi(x->size);
-  for(unsigned i= 0; i < g->size; ++i) {
-    xi= Map<VectorXd>(x->data, x->size); // Copy components.
-    xi[i]+= h; // Modify ith component.
-    gsl_vector_const_view gxiv= gsl_vector_const_view_array(&xi[0], x->size);
-    gsl_vector const *gxi= (gsl_vector const *)&gxiv;
-    gsl_vector_set(g, i, (f_min(gxi, p) - f0) / h);
+void graph::df(gsl_vector const *x, void *p, gsl_vector *grd) {
+  f_min(x, p); // Update not just potential but also forces at x.
+  auto &grph= *(graph *)p;
+  for(unsigned i= 0; i < grd->size; ++i) {
+    gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
   }
 }
 
 
-void graph::fdf(gsl_vector const *x, void *p, double *f, gsl_vector *g) {
+void graph::fdf(gsl_vector const *x, void *p, double *f, gsl_vector *grd) {
   *f= f_min(x, p);
-  static VectorXd xi(x->size);
-  for(unsigned i= 0; i < g->size; ++i) {
-    xi= Map<VectorXd>(x->data, x->size); // Copy components.
-    xi[i]+= h;
-    gsl_vector_const_view gxiv= gsl_vector_const_view_array(&xi[0], x->size);
-    gsl_vector const *gxi= (gsl_vector const *)&gxiv;
-    gsl_vector_set(g, i, (f_min(gxi, p) - *f) / h);
+  auto &grph= *(graph *)p;
+  for(unsigned i= 0; i < grd->size; ++i) {
+    gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
   }
 }
 #endif
 
 
 void graph::minimize() {
-#if 0
+#ifdef AD_HOC
+  net_force_and_pot(positions_);
+  constexpr double MAX_STEP= 0.01;
+  constexpr double STOPPING_CRITERION= 10.0 * MAX_STEP;
+  unsigned const M= nodes_.size();
+  while(max_force_mag_ > STOPPING_CRITERION) {
+    cout << "max_force_mag_=" << max_force_mag_ << endl;
+    double scale= 1.0;
+    if(max_force_mag_ > MAX_STEP) { scale= MAX_STEP / max_force_mag_; }
+    for(unsigned i= 0; i < M; ++i) {
+      positions_.block(0, i, 3, 1)+= scale * force(i);
+    }
+    net_force_and_pot(positions_);
+  }
+#else
   constexpr int MAX_ITER= 1000000;
   unsigned const NUM_NODES= positions_.cols();
   unsigned const GSL_SIZE= 3 * NUM_NODES;
@@ -192,12 +175,12 @@ void graph::minimize() {
   gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
 #else
   gsl_multimin_fdfminimizer_type const *T=
-      gsl_multimin_fdfminimizer_conjugate_fr;
+      gsl_multimin_fdfminimizer_steepest_descent;
   gsl_multimin_fdfminimizer *s= gsl_multimin_fdfminimizer_alloc(T, GSL_SIZE);
-  gsl_multimin_fdfminimizer_set(s, &minex_func, x, 0.01, 1.0E-04);
+  gsl_multimin_fdfminimizer_set(s, &minex_func, x, 1.0, 0.1);
 #endif
 
-  int status;
+  int status= GSL_CONTINUE;
   int iter= 0;
   do {
     ++iter;
@@ -206,7 +189,14 @@ void graph::minimize() {
 #else
     status= gsl_multimin_fdfminimizer_iterate(s);
 #endif
-    if(status) break;
+    if(status) {
+      if(status == GSL_ENOPROG) {
+        cerr << "GSL_ENOPROG returned from gsl_multimin_*iterate()" << endl;
+      } else {
+        cerr << "gsl_multimin_*iterate() returned " << status << endl;
+      }
+      break;
+    }
 #ifdef NM_SIMPLEX
     double const size= gsl_multimin_fminimizer_size(s);
     status= gsl_multimin_test_size(size, 0.1);
@@ -227,21 +217,7 @@ void graph::minimize() {
 #else
   gsl_multimin_fdfminimizer_free(s);
 #endif
-#endif
-
-  net_force_and_pot(positions_);
-  constexpr double MAX_STEP= 0.01;
-  constexpr double STOPPING_CRITERION= 10.0 * MAX_STEP;
-  unsigned const M= nodes_.size();
-  while(max_force_mag_ > STOPPING_CRITERION) {
-    cout << "max_force_mag_=" << max_force_mag_ << endl;
-    double scale= 1.0;
-    if(max_force_mag_ > MAX_STEP) { scale= MAX_STEP / max_force_mag_; }
-    for(unsigned i= 0; i < M; ++i) {
-      positions_.block(0, i, 3, 1)+= scale * force(i);
-    }
-    net_force_and_pot(positions_);
-  }
+#endif // def AD_HOC else
 }
 
 
@@ -330,9 +306,8 @@ void graph::connect() {
 
 
 MatrixXd graph::init_loc(unsigned m) {
-  unsigned const N= 3 * m;
-  MatrixXd r(3, N); // Return-value.
-  for(unsigned i= 0; i < N; ++i) {
+  MatrixXd r(3, m); // Return-value.
+  for(unsigned i= 0; i < m; ++i) {
     constexpr double u= 1.0 / RAND_MAX;
     r(0, i)= m * (rand() * u - 0.5);
     r(1, i)= m * (rand() * u - 0.5);

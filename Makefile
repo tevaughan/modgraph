@@ -20,6 +20,7 @@ clean :
 	@rm -fv modgraph
 	@rm -fv *.neato
 	@rm -fv *.o
+	@rm -fv *.pdf
 	@rm -fv *.png
 	@rm -fv texput.*
 

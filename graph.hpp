@@ -8,8 +8,12 @@
 #include <set> // set
 #include <vector> // vector
 
-#if 1
+#if 0
+#define AD_HOC
+#else
+#if 0
 #define NM_SIMPLEX
+#endif
 #endif
 
 namespace modgraph {
