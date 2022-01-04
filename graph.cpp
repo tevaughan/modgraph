@@ -109,6 +109,8 @@ void graph::df(gsl_vector const *x, void *p, gsl_vector *grd) {
   f_min(x, p); // Update not just potential but also forces at x.
   auto &grph= *(graph *)p;
   for(unsigned i= 0; i < grd->size; ++i) {
+    // Don't fully understand why negative sign is needed here. Maybe has to do
+    // with force's being the negative of the gradient of the potential.
     gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
   }
 }
@@ -118,14 +120,15 @@ void graph::fdf(gsl_vector const *x, void *p, double *f, gsl_vector *grd) {
   *f= f_min(x, p);
   auto &grph= *(graph *)p;
   for(unsigned i= 0; i < grd->size; ++i) {
+    // Don't fully understand why negative sign is needed here. Maybe has to do
+    // with force's being the negative of the gradient of the potential.
     gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
   }
 }
 #endif
 
 
-void graph::minimize() {
-#ifdef AD_HOC
+void graph::minimize_ad_hoc() {
   net_force_and_pot(positions_);
   constexpr double MAX_STEP= 0.01;
   constexpr double STOPPING_CRITERION= 10.0 * MAX_STEP;
@@ -139,7 +142,10 @@ void graph::minimize() {
     }
     net_force_and_pot(positions_);
   }
-#else
+}
+
+
+void graph::minimize_nm_simplex() {
   constexpr int MAX_ITER= 1000000;
   unsigned const NUM_NODES= positions_.cols();
   unsigned const GSL_SIZE= 3 * NUM_NODES;
@@ -149,46 +155,25 @@ void graph::minimize() {
   gsl_vector *x= (gsl_vector *)&init;
   cout << "x->size=" << x->size << endl;
 
-#ifdef NM_SIMPLEX
   /* Set initial step-sizes. */
   gsl_vector *ss= gsl_vector_alloc(GSL_SIZE);
   gsl_vector_set_all(ss, 10.0);
-#endif
 
   /* Initialize method and iterate */
-#ifdef NM_SIMPLEX
   gsl_multimin_function minex_func;
-#else
-  gsl_multimin_function_fdf minex_func;
-#endif
   minex_func.n= GSL_SIZE;
   minex_func.f= f_min;
-#ifndef NM_SIMPLEX
-  minex_func.df= df;
-  minex_func.fdf= fdf;
-#endif
   minex_func.params= this;
 
-#ifdef NM_SIMPLEX
   gsl_multimin_fminimizer_type const *T= gsl_multimin_fminimizer_nmsimplex2;
   gsl_multimin_fminimizer *s= gsl_multimin_fminimizer_alloc(T, GSL_SIZE);
   gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
-#else
-  gsl_multimin_fdfminimizer_type const *T=
-      gsl_multimin_fdfminimizer_steepest_descent;
-  gsl_multimin_fdfminimizer *s= gsl_multimin_fdfminimizer_alloc(T, GSL_SIZE);
-  gsl_multimin_fdfminimizer_set(s, &minex_func, x, 1.0, 0.1);
-#endif
 
   int status= GSL_CONTINUE;
   int iter= 0;
   do {
     ++iter;
-#ifdef NM_SIMPLEX
     status= gsl_multimin_fminimizer_iterate(s);
-#else
-    status= gsl_multimin_fdfminimizer_iterate(s);
-#endif
     if(status) {
       if(status == GSL_ENOPROG) {
         cerr << "GSL_ENOPROG returned from gsl_multimin_*iterate()" << endl;
@@ -197,27 +182,70 @@ void graph::minimize() {
       }
       break;
     }
-#ifdef NM_SIMPLEX
     double const size= gsl_multimin_fminimizer_size(s);
     status= gsl_multimin_test_size(size, 0.1);
-#else
-    status= gsl_multimin_test_gradient(s->gradient, 1.0E-03);
-#endif
     if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
-#ifdef NM_SIMPLEX
     printf("%5d f()=%7.3f size=%.3f\n", iter, s->fval, size);
-#else
-    printf("%5d f()=%7.3f\n", iter, s->f);
-#endif
   } while(status == GSL_CONTINUE && iter < MAX_ITER);
 
   positions_= pos_map(s->x);
-#ifdef NM_SIMPLEX
   gsl_multimin_fminimizer_free(s);
-#else
+}
+
+
+void graph::minimize_steepest_descent() {
+  constexpr int MAX_ITER= 1000000;
+  unsigned const NUM_NODES= positions_.cols();
+  unsigned const GSL_SIZE= 3 * NUM_NODES;
+
+  /* Starting point */
+  gsl_vector_view init= gsl_vector_view_array(&positions_(0, 0), GSL_SIZE);
+  gsl_vector *x= (gsl_vector *)&init;
+  cout << "x->size=" << x->size << endl;
+
+  gsl_multimin_function_fdf minex_func;
+  minex_func.n= GSL_SIZE;
+  minex_func.f= f_min;
+  minex_func.df= df;
+  minex_func.fdf= fdf;
+  minex_func.params= this;
+
+  gsl_multimin_fdfminimizer_type const *T=
+      gsl_multimin_fdfminimizer_steepest_descent;
+  gsl_multimin_fdfminimizer *s= gsl_multimin_fdfminimizer_alloc(T, GSL_SIZE);
+  gsl_multimin_fdfminimizer_set(s, &minex_func, x, 1.0, 0.1);
+
+  int status= GSL_CONTINUE;
+  int iter= 0;
+  do {
+    ++iter;
+    status= gsl_multimin_fdfminimizer_iterate(s);
+    if(status) {
+      if(status == GSL_ENOPROG) {
+        cerr << "GSL_ENOPROG returned from gsl_multimin_*iterate()" << endl;
+      } else {
+        cerr << "gsl_multimin_*iterate() returned " << status << endl;
+      }
+      break;
+    }
+    status= gsl_multimin_test_gradient(s->gradient, 1.0E-03);
+    if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
+    printf("%5d f()=%7.3f\n", iter, s->f);
+  } while(status == GSL_CONTINUE && iter < MAX_ITER);
+
+  positions_= pos_map(s->x);
   gsl_multimin_fdfminimizer_free(s);
+}
+
+
+void graph::minimize() {
+#ifdef AD_HOC
+  minimize_ad_hoc();
+#elif defined(NM_SIMPLEX)
+  minimize_nm_simplex();
+#else
+  minimize_steepest_descent();
 #endif
-#endif // def AD_HOC else
 }
 
 
@@ -258,15 +286,6 @@ void graph::write_asy() const {
       char const *color= "";
       int const s= (i + k) % m;
       bool flag= false;
-#if 0
-      for(auto f: factors_) {
-        if(s == f || s == m - f) {
-          flag= true;
-          if(i == 22 && k == 28 && m == 30) cout << "flag=true" << endl;
-          break;
-        }
-      }
-#endif
       if(s == 0) {
         color= "blue";
       } else if(flag) {
@@ -326,21 +345,10 @@ bool is_prime(int n) {
 }
 
 
-void graph::init_factors(int m) {
-  // Collect only composite factors.
-  // - 4 is least possible composite factor.
-  // - m/2 is greatest possible composite factor.
-  for(int i= 4; i <= m / 2; ++i) {
-    if(m % i == 0 && !is_prime(i)) factors_.push_back(i);
-  }
-}
-
-
 graph::graph(int m): positions_(init_loc(m)), nodes_(m) {
   if(m < 0) throw "illegal modulus";
   if(univ_attract_ <= 1.0) throw "illegal universal attraction";
   cout << "initializing factors" << endl;
-  init_factors(m); // Initialize list of factors of m.
   connect(); // Establish all interconnections among nodes.
   minimize(); // Find final positions.
   write_asy(); // Write text-file for asymptote.

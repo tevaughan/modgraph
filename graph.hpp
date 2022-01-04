@@ -79,12 +79,15 @@ class graph {
   static void fdf(gsl_vector const *x, void *p, double *f, gsl_vector *g);
 #endif
 
+  void minimize_ad_hoc();
+  void minimize_nm_simplex();
+  void minimize_steepest_descent();
+
   /// Copy initial values in positions_ into gsl; drive gsl's minimizer; and
   /// then copy final values from gsl back into positions_.
   void minimize();
 
   std::vector<node> nodes_; ///< Collection of all nodes in graph.
-  std::vector<int> factors_; ///< All composite factors of modulus.
 
   /// Scale of universal attraction between every node and every other.
   /// - `univ_attract` should be larger than unity; the larger, the weaker.
