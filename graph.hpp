@@ -55,12 +55,6 @@ class graph {
   /// @return   Force felt by Node i from Node j.
   Vector3d force_and_pot(unsigned i, unsigned j, Matrix3Xd const &positions);
 
-  /// Net force on Node i.
-  /// - This should be called only after init_forces() has been called.
-  /// @param i  Offset of node.
-  /// @return   Net force on node.
-  auto force(unsigned i) const { return net_forces_.block(i * 3, 0, 3, 1); }
-
   /// Compute net force felt by each node from every other node, and compute
   /// overall potential of system.
   /// - `calc_net_force_and_pot()` takes argument (and does not directly use

@@ -68,15 +68,6 @@ void graph::net_force_and_pot(Matrix3Xd const &positions) {
   }
   // OK to call force(unsigned) after this point.
   net_forces_= forces_.rowwise().sum();
-  max_force_mag_= 0.0;
-  for(unsigned i= 0; i < M; ++i) {
-    auto const f= force(i);
-    double const mag= f.norm();
-    if(mag > max_force_mag_) {
-      max_force_mag_= mag;
-      max_force_off_= i;
-    }
-  }
 }
 
 
@@ -127,23 +118,6 @@ void graph::fdf(gsl_vector const *x, void *p, double *pot, gsl_vector *grd) {
   }
 }
 #endif
-
-
-void graph::minimize_ad_hoc() {
-  net_force_and_pot(positions_);
-  constexpr double MAX_STEP= 0.01;
-  constexpr double STOPPING_CRITERION= 10.0 * MAX_STEP;
-  unsigned const M= nodes_.size();
-  while(max_force_mag_ > STOPPING_CRITERION) {
-    cout << "max_force_mag_=" << max_force_mag_ << endl;
-    double scale= 1.0;
-    if(max_force_mag_ > MAX_STEP) { scale= MAX_STEP / max_force_mag_; }
-    for(unsigned i= 0; i < M; ++i) {
-      positions_.block(0, i, 3, 1)+= scale * force(i);
-    }
-    net_force_and_pot(positions_);
-  }
-}
 
 
 void graph::minimize_nm_simplex() {
