@@ -1,4 +1,8 @@
 
+/// @file       graph.hpp
+/// @brief      Declaration of modgraph::graph.
+/// @copyright  2022 Thomas E. Vaughan, all rights reserved.
+
 #pragma once
 
 #include "node.hpp" // node
@@ -9,11 +13,7 @@
 #include <vector> // vector
 
 #if 0
-#define AD_HOC
-#else
-#if 0
 #define NM_SIMPLEX
-#endif
 #endif
 
 namespace modgraph {
@@ -34,19 +34,22 @@ class graph {
   Matrix3Xd positions_;
 
   /// 3NxN matrix storing force felt by each node from each other node.
-  /// - force_ is initialized by init_forces().
+  /// - forces_ is initialized by net_force_and_pot().
   MatrixXd forces_;
 
   /// 3Nx1 matrix storing net force felt by each node.
-  /// - net_forces_ is initialized by init_forces().
+  /// - net_forces_ is initialized by net_force_and_pot().
   MatrixXd net_forces_;
 
-  double potential_; ///< Scalar potential whose gradient produces forces.
+  /// Scalar potential whose gradient produces forces.
+  /// - potential_ is calculated by net_force_and_pot().
+  double potential_;
+
   double max_force_mag_; ///< Magnitude of greatest net force on any node.
   unsigned max_force_off_; ///< Offset of node experiencing maximum force.
 
   /// Compute force felt by Node i from Node j, and update potential_.
-  /// - force() is called by net_force_and_pot().
+  /// - force_and_pot() is called by net_force_and_pot().
   /// @param i  Offset of one node.
   /// @param j  Offset of other node.
   /// @return   Force felt by Node i from Node j.
@@ -66,16 +69,30 @@ class graph {
   /// @param positions  3xN matrix for position of each of N particles.
   void net_force_and_pot(Matrix3Xd const &positions);
 
-  /// Function that GSL will minimize.
+  /// Potential that GSL will minimize.
   /// - Data in `x` have same structure as data in positions_.
-  /// - However, gsl maitains its own copy of them during minimization.
+  /// - However, gsl maintains its own copy of them during minimization.
   /// @param x  Pointer to working position-components of every particle.
   /// @param p  Pointer to instance of graph.
-  /// @return   Quantity to be minimized.
-  static double f_min(gsl_vector const *x, void *p);
+  /// @return   Potential to be minimized.
+  static double f(gsl_vector const *x, void *p);
 
 #ifndef NM_SIMPLEX
+  /// Calculate gradient of potential.
+  /// - Data in `x` have same structure as data in positions_.
+  /// - However, gsl maintains its own copy of them during minimization.
+  /// @param x  Pointer to working position-components of every particle.
+  /// @param p  Pointer to instance of graph.
+  /// @param g  Pointer to (output) components of gradient.
   static void df(gsl_vector const *x, void *p, gsl_vector *g);
+
+  /// Calculate potential to be minimized and gradient of potential.
+  /// - Data in `x` have same structure as data in positions_.
+  /// - However, gsl maintains its own copy of them during minimization.
+  /// @param x  Pointer to working position-components of every particle.
+  /// @param p  Pointer to instance of graph.
+  /// @param f  Pointer to (output) potential to be minimized.
+  /// @param g  Pointer to (output) components of gradient.
   static void fdf(gsl_vector const *x, void *p, double *f, gsl_vector *g);
 #endif
 
@@ -105,13 +122,14 @@ class graph {
   ///   they be separated by unit distance.
   double direct_attract_= 2.0;
 
-  /// Scale of attraction between pair of nodes whose sum is modulus.
-  /// - `sum_modulus_attract_` should be larger than unity.
-  /// - `sum_modulus_attract_` is force proportional to distance.
+  /// Scale of attraction between pair of nodes whose sum is modulus or half of
+  /// modulus.
+  /// - `sum_attract_` should be larger than unity.
+  /// - `sum_attract_` is force proportional to distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double sum_modulus_attract_= 10.0;
+  double sum_attract_= 10.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void write_asy() const; ///< Write text-file for asymptote.

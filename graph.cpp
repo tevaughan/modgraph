@@ -1,5 +1,6 @@
 
 /// @file       graph.cpp
+/// @brief      Definition of modgraph::graph.
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 
 #include "graph.hpp"
@@ -42,8 +43,8 @@ Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   // Attraction of complements by spring-law.
   unsigned const sr= (i + j) % M;
   if(sr == 0 || sr == M - sr) {
-    f+= u * (r / sum_modulus_attract_);
-    potential_+= 0.5 * r * r / sum_modulus_attract_;
+    f+= u * (r / sum_attract_);
+    potential_+= 0.5 * r * r / sum_attract_;
   }
   // Attraction of each node to zero by spring-law.
   if(i == 0 || j == 0) {
@@ -93,7 +94,7 @@ Map<MatrixXd const> pos_map(gsl_vector const *x) {
 }
 
 
-double graph::f_min(gsl_vector const *x, void *p) {
+double graph::f(gsl_vector const *x, void *p) {
   auto const positions= pos_map(x);
   auto &g= *(graph *)p;
   g.net_force_and_pot(positions);
@@ -106,7 +107,7 @@ constexpr double h= 0.001;
 
 
 void graph::df(gsl_vector const *x, void *p, gsl_vector *grd) {
-  f_min(x, p); // Update not just potential but also forces at x.
+  f(x, p); // Update not just potential but also forces at x.
   auto &grph= *(graph *)p;
   for(unsigned i= 0; i < grd->size; ++i) {
     // Don't fully understand why negative sign is needed here. Maybe has to do
@@ -116,8 +117,8 @@ void graph::df(gsl_vector const *x, void *p, gsl_vector *grd) {
 }
 
 
-void graph::fdf(gsl_vector const *x, void *p, double *f, gsl_vector *grd) {
-  *f= f_min(x, p);
+void graph::fdf(gsl_vector const *x, void *p, double *pot, gsl_vector *grd) {
+  *pot= f(x, p);
   auto &grph= *(graph *)p;
   for(unsigned i= 0; i < grd->size; ++i) {
     // Don't fully understand why negative sign is needed here. Maybe has to do
@@ -162,7 +163,7 @@ void graph::minimize_nm_simplex() {
   /* Initialize method and iterate */
   gsl_multimin_function minex_func;
   minex_func.n= GSL_SIZE;
-  minex_func.f= f_min;
+  minex_func.f= f;
   minex_func.params= this;
 
   gsl_multimin_fminimizer_type const *T= gsl_multimin_fminimizer_nmsimplex2;
@@ -205,7 +206,7 @@ void graph::minimize_steepest_descent() {
 
   gsl_multimin_function_fdf minex_func;
   minex_func.n= GSL_SIZE;
-  minex_func.f= f_min;
+  minex_func.f= f;
   minex_func.df= df;
   minex_func.fdf= fdf;
   minex_func.params= this;
