@@ -18,6 +18,7 @@ using Eigen::VectorXd;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::vector;
 
 
 Vector3d graph::repulsion(Vector3d const &u, double r) {
@@ -30,7 +31,36 @@ Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   if(nodes_[i].next == j || nodes_[j].next == i) {
     potential_+= 0.5 * r * r / edge_addtract_;
-    f= u * (r / edge_addtract_);
+    f= u * r / edge_addtract_;
+  }
+  return f;
+}
+
+
+/// Calculate factors of `m`.
+/// @param m  Integer (greater than one) whose factors are calculated.
+/// @return  List of factors.
+vector<int> calculate_factors(int m) {
+  if(m < 2) throw "m < 2";
+  vector<int> f({0, 1}); // Zero is equivalent to m in modular arithmetic!
+  for(int i= 2; i <= m / 2; ++i) {
+    if((m % i) == 0) f.push_back(i);
+  }
+  return f;
+}
+
+
+Vector3d graph::sum_attraction(int i, int j, Vector3d const &u, double r) {
+  Vector3d f= Vector3d::Zero();
+  int const m= nodes_.size(); // Modulus.
+  int const sum= (i + j) % m;
+  auto incr= [&](double s= 1.0) {
+    potential_+= 0.5 * s * r * r / sum_attract_;
+    f+= s * u * r / sum_attract_;
+  };
+  static vector<int> const factors= calculate_factors(m);
+  for(int k: factors) {
+    if(sum == k || m - sum == k) { incr((k == 0 ? m : k) * 1.0 / m); }
   }
   return f;
 }
@@ -44,19 +74,8 @@ Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   // Unit-vector from Node i toward Node j.
   auto const u= d / r;
   f+= repulsion(u, r); // Repulsion by inverse-square law.
-  f+= edge_attraction(i,j,u,r); // Attraction along graph-edge by spring.
-  unsigned const M= nodes_.size(); // Modulus.
-  // Attraction of complements by spring-law.
-  unsigned const sr= (i + j) % M;
-  if(sr == 0 || sr == M - sr) {
-    f+= u * (r / sum_attract_);
-    potential_+= 0.5 * r * r / sum_attract_;
-  }
-  // Attraction of each node to zero by spring-law.
-  if(i == 0 || j == 0) {
-    f+= u * (r / univ_attract_);
-    potential_+= 0.5 * r * r / univ_attract_;
-  }
+  f+= edge_attraction(i, j, u, r); // Attraction along graph-edge by spring.
+  f+= sum_attraction(i, j, u, r); // Attraction because of sum of i and j.
   return f;
 }
 
@@ -306,7 +325,6 @@ bool is_prime(int n) {
 
 graph::graph(int m): positions_(init_loc(m)), nodes_(m) {
   if(m < 0) throw "illegal modulus";
-  if(univ_attract_ <= 1.0) throw "illegal universal attraction";
   cout << "initializing factors" << endl;
   connect(); // Establish all interconnections among nodes.
   minimize(); // Find final positions.

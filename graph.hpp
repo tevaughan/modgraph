@@ -52,14 +52,24 @@ class graph {
   /// @return  Force felt by one node.
   Vector3d repulsion(Vector3d const &u, double r);
 
-  /// Calculate spring-attraction force felt by node Node from Node j because
-  /// of a directed-graph edge between them.
+  /// Calculate spring-attraction force felt by Node i from Node j because of
+  /// directed graph-edge between them.
   /// @param i  Offset of one node.
   /// @param j  Offset of other node.
   /// @param u  Unit-vector from Node i toward Node j.
   /// @param r  Distance between Node i and Node j.
   /// @return  Force felt by Node i.
   Vector3d edge_attraction(int i, int j, Vector3d const &u, double r);
+
+  /// Calculate spring-attraction force felt by Node i from Node j either
+  /// because (i+j)%M==f, where f is factor of modulus M, or because
+  /// (i+j)%M==M-f.
+  /// @param i  Offset of one node.
+  /// @param j  Offset of other node.
+  /// @param u  Unit-vector from Node i toward Node j.
+  /// @param r  Distance between Node i and Node j.
+  /// @return  Force felt by Node i.
+  Vector3d sum_attraction(int i, int j, Vector3d const &u, double r);
 
   /// Compute force felt by Node i from Node j, and update potential_.
   /// - force_and_pot() is called by net_force_and_pot().
@@ -117,21 +127,13 @@ class graph {
 
   std::vector<node> nodes_; ///< Collection of all nodes in graph.
 
-  /// Scale of universal attraction between every node and every other.
-  /// - `univ_attract` should be larger than unity; the larger, the weaker.
-  /// - `univ_attract` is force proportional to distance.
-  /// - Scale for forces is set by universal repulsion, which decays with
-  ///   inverse-square distance and has unit-value between two nodes whenever
-  ///   they be separated by unit distance.
-  double univ_attract_= 50.0;
-
   /// Scale of attraction between pair of nodes connected by a directed edge.
   /// - `edge_addtract_` should be larger than unity.
   /// - `edge_addtract_` is force proportional to distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double edge_addtract_= 2.0;
+  double edge_addtract_= 1.0;
 
   /// Scale of attraction between pair of nodes whose sum is modulus or half of
   /// modulus.
@@ -140,7 +142,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double sum_attract_= 10.0;
+  double sum_attract_= 4.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void write_asy() const; ///< Write text-file for asymptote.
