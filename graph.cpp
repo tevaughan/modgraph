@@ -259,12 +259,16 @@ void graph::write_asy() const {
       << "settings.prc = false;\n"
       << "unitsize(" << 1 << "cm);\n"
       << "import three;\n"
-      << "currentprojection = perspective(1,-2,1);\n";
+      << "currentprojection = perspective(0,-2,0);\n";
   for(int i= 0; i < m; ++i) {
     auto const &ap= positions_.col(i);
+    ofs << "draw(shift"
+        << "(" << ap[0] << "-0.25," << ap[1] << "-0.25," << ap[2] << "-0.25)"
+        << "*scale3(0.5)*unitcube, gray(0.75)+opacity(0.5));\n";
+    // Billboard or Embedded
     ofs << "label(\"" << i << "\","
         << "(" << ap[0] << "," << ap[1] << "," << ap[2] << ")"
-        << ",red,Billboard);\n";
+        << ",lightyellow,Billboard);\n";
 #if 1
     auto const &an= nodes_[i];
     int const j= an.next;
