@@ -211,7 +211,7 @@ void graph::minimize_steepest_descent() {
   minex_func.params= this;
 
   gsl_multimin_fdfminimizer_type const *T=
-      gsl_multimin_fdfminimizer_steepest_descent;
+      gsl_multimin_fdfminimizer_conjugate_fr;
   gsl_multimin_fdfminimizer *s= gsl_multimin_fdfminimizer_alloc(T, GSL_SIZE);
   gsl_multimin_fdfminimizer_set(s, &minex_func, x, 1.0, 0.1);
 
@@ -263,13 +263,12 @@ void graph::write_asy() const {
   for(int i= 0; i < m; ++i) {
     auto const &ap= positions_.col(i);
     ofs << "draw(shift"
-        << "(" << ap[0] << "-0.25," << ap[1] << "-0.25," << ap[2] << "-0.25)"
-        << "*scale3(0.5)*unitcube, gray(0.75)+opacity(0.5));\n";
+        << "(" << ap[0] << "," << ap[1] << "," << ap[2] << ")"
+        << "*scale3(0.25)*unitsphere, white+opacity(0.5));\n";
     // Billboard or Embedded
     ofs << "label(\"" << i << "\","
         << "(" << ap[0] << "," << ap[1] << "," << ap[2] << ")"
-        << ",lightyellow,Billboard);\n";
-#if 1
+        << ",black,Billboard);\n";
     auto const &an= nodes_[i];
     int const j= an.next;
     if(i != j) {
@@ -285,29 +284,6 @@ void graph::write_asy() const {
           << ",p=gray(0.6)"
           << ",light=currentlight);\n";
     }
-    for(int k= 0; k < m; ++k) {
-      if(i == k) continue;
-      char const *color= "";
-      int const s= (i + k) % m;
-      bool flag= false;
-      if(s == 0) {
-        color= "blue";
-      } else if(flag) {
-        color= "lightgray";
-      } else {
-        continue;
-      }
-      auto const &cp= positions_.col(k);
-      auto const ac_u= (cp - ap).normalized() * 0.25;
-      auto const ac= ap + ac_u;
-      auto const ca= cp - ac_u;
-      ofs << "draw("
-          << "(" << ac[0] << "," << ac[1] << "," << ac[2] << ")"
-          << "--"
-          << "(" << ca[0] << "," << ca[1] << "," << ca[2] << ")"
-          << "," << color << ");\n";
-    }
-#endif
   }
 }
 
