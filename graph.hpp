@@ -45,6 +45,22 @@ class graph {
   /// - potential_ is calculated by net_force_and_pot().
   double potential_;
 
+  /// Calculate inverse-square-distance repulsive force between felt by one
+  /// node from other, and increment global potential.
+  /// @param u  Unit-vector from one node to other.
+  /// @param r  Distance between nodes.
+  /// @return  Force felt by one node.
+  Vector3d repulsion(Vector3d const &u, double r);
+
+  /// Calculate spring-attraction force felt by node Node from Node j because
+  /// of a directed-graph edge between them.
+  /// @param i  Offset of one node.
+  /// @param j  Offset of other node.
+  /// @param u  Unit-vector from Node i toward Node j.
+  /// @param r  Distance between Node i and Node j.
+  /// @return  Force felt by Node i.
+  Vector3d edge_attraction(int i, int j, Vector3d const &u, double r);
+
   /// Compute force felt by Node i from Node j, and update potential_.
   /// - force_and_pot() is called by net_force_and_pot().
   /// @param i  Offset of one node.
@@ -110,12 +126,12 @@ class graph {
   double univ_attract_= 50.0;
 
   /// Scale of attraction between pair of nodes connected by a directed edge.
-  /// - `direct_attract_` should be larger than unity.
-  /// - `direct_attract_` is force proportional to distance.
+  /// - `edge_addtract_` should be larger than unity.
+  /// - `edge_addtract_` is force proportional to distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double direct_attract_= 2.0;
+  double edge_addtract_= 2.0;
 
   /// Scale of attraction between pair of nodes whose sum is modulus or half of
   /// modulus.

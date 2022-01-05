@@ -20,6 +20,22 @@ using std::cout;
 using std::endl;
 
 
+Vector3d graph::repulsion(Vector3d const &u, double r) {
+  potential_+= 1.0 / r;
+  return -u / (r * r);
+}
+
+
+Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
+  Vector3d f= Vector3d::Zero();
+  if(nodes_[i].next == j || nodes_[j].next == i) {
+    potential_+= 0.5 * r * r / edge_addtract_;
+    f= u * (r / edge_addtract_);
+  }
+  return f;
+}
+
+
 Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   Vector3d f= Vector3d::Zero();
   if(i == j) return f;
@@ -27,18 +43,8 @@ Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   double const r= d.norm();
   // Unit-vector from Node i toward Node j.
   auto const u= d / r;
-  // Repulsion by inverse-square law.
-  {
-    f+= -u / (r * r);
-    potential_+= 1.0 / r;
-  }
-  // Attraction along edge by spring-law.
-  unsigned const inext= nodes_[i].next;
-  unsigned const jnext= nodes_[j].next;
-  if(inext == j || jnext == i) {
-    f+= u * (r / direct_attract_);
-    potential_+= 0.5 * r * r / direct_attract_;
-  }
+  f+= repulsion(u, r); // Repulsion by inverse-square law.
+  f+= edge_attraction(i,j,u,r); // Attraction along graph-edge by spring.
   unsigned const M= nodes_.size(); // Modulus.
   // Attraction of complements by spring-law.
   unsigned const sr= (i + j) % M;
