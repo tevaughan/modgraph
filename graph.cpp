@@ -168,7 +168,7 @@ void graph::minimize_nm_simplex() {
 }
 
 
-void graph::minimize_steepest_descent() {
+void graph::minimize_gradient() {
   constexpr int MAX_ITER= 1000000;
   unsigned const NUM_NODES= positions_.cols();
   unsigned const GSL_SIZE= 3 * NUM_NODES;
@@ -214,12 +214,10 @@ void graph::minimize_steepest_descent() {
 
 
 void graph::minimize() {
-#ifdef AD_HOC
-  minimize_ad_hoc();
-#elif defined(NM_SIMPLEX)
+#ifdef NM_SIMPLEX
   minimize_nm_simplex();
 #else
-  minimize_steepest_descent();
+  minimize_gradient();
 #endif
 }
 

@@ -45,9 +45,6 @@ class graph {
   /// - potential_ is calculated by net_force_and_pot().
   double potential_;
 
-  double max_force_mag_; ///< Magnitude of greatest net force on any node.
-  unsigned max_force_off_; ///< Offset of node experiencing maximum force.
-
   /// Compute force felt by Node i from Node j, and update potential_.
   /// - force_and_pot() is called by net_force_and_pot().
   /// @param i  Offset of one node.
@@ -90,9 +87,13 @@ class graph {
   static void fdf(gsl_vector const *x, void *p, double *f, gsl_vector *g);
 #endif
 
-  void minimize_ad_hoc();
+  // Minimize potential via simplex method not requiring forces.
+  // - This is called by minimize().
   void minimize_nm_simplex();
-  void minimize_steepest_descent();
+
+  // Minimize potential via gradient-method requiring forces.
+  // - This is called by minimize().
+  void minimize_gradient();
 
   /// Copy initial values in positions_ into gsl; drive gsl's minimizer; and
   /// then copy final values from gsl back into positions_.
