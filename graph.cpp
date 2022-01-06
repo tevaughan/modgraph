@@ -21,12 +21,12 @@ using std::endl;
 using std::vector;
 
 
-/// Calculate nontrivial factors of `m`.
-/// - "Nontrivial" here means neither 1 nor `m`.
-/// @param m  Positive integer whose nontrivial factors are calculated.
+/// Calculate factors of `m`.
+/// - Include 0, which represents `m` in modular arithmetic.
+/// @param m  Positive integer whose factors are calculated.
 /// @return  List of nontrivial factors.
 vector<int> calculate_factors(int m) {
-  vector<int> f;
+  vector<int> f({0, 1});
   for(int i= 2; i <= m / 2; ++i) {
     if((m % i) == 0) f.push_back(i);
   }
@@ -60,19 +60,28 @@ Vector3d graph::sum_attraction(int i, int j, Vector3d const &u, double r) {
   int const sum= (i + j) % m;
   static vector<int> const factors= calculate_factors(m);
   double const c= 1.0 / sum_attract_;
+  double const b= c / m;
   for(int n: factors) {
-    if(sum == n || m - sum == n) { f+= attraction(n * c / m, u, r); }
+    double const a= n * b;
+    if(sum == n) f+= attraction((n == 0 ? c : a), u, r);
+    if(m - sum == n) f+= attraction(a, u, r);
   }
-  if(sum == 0) { f+= attraction(c, u, r); }
   return f;
 }
 
 
 Vector3d graph::all_attraction(int i, int j, Vector3d const &u, double r) {
-  if(i == 0 || i == 1 || j == 0 || j == 1) {
-    return attraction(1.0 / all_attract_, u, r);
+  Vector3d f= Vector3d::Zero();
+  int const m= nodes_.size(); // Modulus.
+  static vector<int> const factors= calculate_factors(m);
+  double const c= 1.0 / all_attract_;
+  double const b= c / m;
+  for(int n: factors) {
+    double const a= n * b;
+    if(i == n || j == n) f+= attraction((n == 0 ? c : a), u, r);
+    if(i == m - n || j == m - n) f+= attraction(a, u, r);
   }
-  return Vector3d::Zero();
+  return f;
 }
 
 
@@ -265,7 +274,7 @@ void graph::write_asy() const {
   ostringstream oss;
   oss << m << ".asy";
   ofstream ofs(oss.str());
-  double const ycam= -pow(2.0 * nodes_.size(), 1.0 / 3.0);
+  double const ycam= -pow(all_attract_ * nodes_.size(), 1.0 / 3.0);
   ofs << "settings.outformat = \"pdf\";\n"
       << "settings.prc = false;\n"
       << "unitsize(" << 1 << "cm);\n"

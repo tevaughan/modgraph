@@ -137,7 +137,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double edge_attract_= 1.0;
+  double edge_attract_= 1.5;
 
   /// Scale of attraction between pair of nodes whose sum is modulus or half of
   /// modulus.
@@ -146,7 +146,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double sum_attract_= 8.0;
+  double sum_attract_= 15.0;
 
   /// Scale of attraction between (a) each of zero and one and (b) every other
   /// node.
@@ -155,7 +155,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double all_attract_= 128.0;
+  double all_attract_= 150.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void write_asy() const; ///< Write text-file for asymptote.
