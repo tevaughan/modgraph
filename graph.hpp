@@ -128,12 +128,12 @@ class graph {
   std::vector<node> nodes_; ///< Collection of all nodes in graph.
 
   /// Scale of attraction between pair of nodes connected by a directed edge.
-  /// - `edge_addtract_` should be larger than unity.
-  /// - `edge_addtract_` is force proportional to distance.
+  /// - `edge_attract_` should be larger than unity.
+  /// - `edge_attract_` is force proportional to distance.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double edge_addtract_= 1.0;
+  double edge_attract_= 1.0;
 
   /// Scale of attraction between pair of nodes whose sum is modulus or half of
   /// modulus.

@@ -30,8 +30,9 @@ Vector3d graph::repulsion(Vector3d const &u, double r) {
 Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   if(nodes_[i].next == j || nodes_[j].next == i) {
-    potential_+= 0.5 * r * r / edge_addtract_;
-    f= u * r / edge_addtract_;
+    double const k= 1.0 / edge_attract_; // Spring-constant.
+    potential_+= 0.5 * k * r * r;
+    f= u * k * r;
   }
   return f;
 }
@@ -54,9 +55,10 @@ Vector3d graph::sum_attraction(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   int const m= nodes_.size(); // Modulus.
   int const sum= (i + j) % m;
-  auto incr= [&](double s= 1.0) {
-    potential_+= 0.5 * s * r * r / sum_attract_;
-    f+= s * u * r / sum_attract_;
+  auto incr= [&](double s) {
+    double const k= s / sum_attract_; // Spring-constant.
+    potential_+= 0.5 * k * r * r;
+    f+= u * k * r;
   };
   static vector<int> const factors= calculate_factors(m);
   for(int k: factors) {
@@ -145,6 +147,7 @@ void graph::fdf(gsl_vector const *x, void *p, double *pot, gsl_vector *grd) {
 #endif
 
 
+#ifdef NM_SIMPLEX
 void graph::minimize_nm_simplex() {
   constexpr int MAX_ITER= 1000000;
   unsigned const NUM_NODES= positions_.cols();
@@ -191,8 +194,7 @@ void graph::minimize_nm_simplex() {
   positions_= pos_map(s->x);
   gsl_multimin_fminimizer_free(s);
 }
-
-
+#else
 void graph::minimize_gradient() {
   constexpr int MAX_ITER= 1000000;
   unsigned const NUM_NODES= positions_.cols();
@@ -236,6 +238,7 @@ void graph::minimize_gradient() {
   positions_= pos_map(s->x);
   gsl_multimin_fdfminimizer_free(s);
 }
+#endif
 
 
 void graph::minimize() {
