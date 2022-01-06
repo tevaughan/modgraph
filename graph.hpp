@@ -45,6 +45,8 @@ class graph {
   /// - potential_ is calculated by net_force_and_pot().
   double potential_;
 
+  Vector3d attraction(double k, Vector3d const &u, double r);
+
   /// Calculate inverse-square-distance repulsive force between felt by one
   /// node from other, and increment global potential.
   /// @param u  Unit-vector from one node to other.
@@ -70,6 +72,8 @@ class graph {
   /// @param r  Distance between Node i and Node j.
   /// @return  Force felt by Node i.
   Vector3d sum_attraction(int i, int j, Vector3d const &u, double r);
+
+  Vector3d all_attraction(int i, int j, Vector3d const &u, double r);
 
   /// Compute force felt by Node i from Node j, and update potential_.
   /// - force_and_pot() is called by net_force_and_pot().
@@ -143,6 +147,15 @@ class graph {
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
   double sum_attract_= 8.0;
+
+  /// Scale of attraction between (a) each of zero and one and (b) every other
+  /// node.
+  /// - `all_attract_` should be larger than unity.
+  /// - `all_attract_` is force proportional to distance.
+  /// - Scale for forces is set by universal repulsion, which decays with
+  ///   inverse-square distance and has unit-value between two nodes whenever
+  ///   they be separated by unit distance.
+  double all_attract_= 128.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void write_asy() const; ///< Write text-file for asymptote.

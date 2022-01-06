@@ -21,29 +21,12 @@ using std::endl;
 using std::vector;
 
 
-Vector3d graph::repulsion(Vector3d const &u, double r) {
-  potential_+= 1.0 / r;
-  return -u / (r * r);
-}
-
-
-Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
-  Vector3d f= Vector3d::Zero();
-  if(nodes_[i].next == j || nodes_[j].next == i) {
-    double const k= 1.0 / edge_attract_; // Spring-constant.
-    potential_+= 0.5 * k * r * r;
-    f= u * k * r;
-  }
-  return f;
-}
-
-
-/// Calculate factors of `m`.
-/// @param m  Integer (greater than one) whose factors are calculated.
-/// @return  List of factors.
+/// Calculate nontrivial factors of `m`.
+/// - "Nontrivial" here means neither 1 nor `m`.
+/// @param m  Positive integer whose nontrivial factors are calculated.
+/// @return  List of nontrivial factors.
 vector<int> calculate_factors(int m) {
-  if(m < 2) throw "m < 2";
-  vector<int> f({0, 1}); // Zero is equivalent to m in modular arithmetic!
+  vector<int> f;
   for(int i= 2; i <= m / 2; ++i) {
     if((m % i) == 0) f.push_back(i);
   }
@@ -51,20 +34,45 @@ vector<int> calculate_factors(int m) {
 }
 
 
+Vector3d graph::attraction(double k, Vector3d const &u, double r) {
+  potential_+= 0.5 * k * r * r;
+  return u * k * r;
+}
+
+
+Vector3d graph::repulsion(Vector3d const &u, double r) {
+  potential_+= 1.0 / r;
+  return -u / (r * r);
+}
+
+
+Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
+  if(nodes_[i].next == j || nodes_[j].next == i) {
+    return attraction(1.0 / edge_attract_, u, r);
+  }
+  return Vector3d::Zero();
+}
+
+
 Vector3d graph::sum_attraction(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   int const m= nodes_.size(); // Modulus.
   int const sum= (i + j) % m;
-  auto incr= [&](double s) {
-    double const k= s / sum_attract_; // Spring-constant.
-    potential_+= 0.5 * k * r * r;
-    f+= u * k * r;
-  };
   static vector<int> const factors= calculate_factors(m);
-  for(int k: factors) {
-    if(sum == k || m - sum == k) { incr((k == 0 ? m : k) * 1.0 / m); }
+  double const c= 1.0 / sum_attract_;
+  for(int n: factors) {
+    if(sum == n || m - sum == n) { f+= attraction(n * c / m, u, r); }
   }
+  if(sum == 0) { f+= attraction(c, u, r); }
   return f;
+}
+
+
+Vector3d graph::all_attraction(int i, int j, Vector3d const &u, double r) {
+  if(i == 0 || i == 1 || j == 0 || j == 1) {
+    return attraction(1.0 / all_attract_, u, r);
+  }
+  return Vector3d::Zero();
 }
 
 
@@ -78,6 +86,7 @@ Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
   f+= repulsion(u, r); // Repulsion by inverse-square law.
   f+= edge_attraction(i, j, u, r); // Attraction along graph-edge by spring.
   f+= sum_attraction(i, j, u, r); // Attraction because of sum of i and j.
+  f+= all_attraction(i, j, u, r); // Attraction to 0 and 1.
   return f;
 }
 
@@ -256,11 +265,12 @@ void graph::write_asy() const {
   ostringstream oss;
   oss << m << ".asy";
   ofstream ofs(oss.str());
+  double const ycam= -pow(2.0 * nodes_.size(), 1.0 / 3.0);
   ofs << "settings.outformat = \"pdf\";\n"
       << "settings.prc = false;\n"
       << "unitsize(" << 1 << "cm);\n"
       << "import three;\n"
-      << "currentprojection = perspective(0,-2,0);\n";
+      << "currentprojection = perspective(0," << ycam << ",0);\n";
   for(int i= 0; i < m; ++i) {
     auto const &ap= positions_.col(i);
     ofs << "draw(shift"
