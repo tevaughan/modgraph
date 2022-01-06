@@ -142,7 +142,7 @@ class graph {
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  double sum_attract_= 4.0;
+  double sum_attract_= 8.0;
 
   void connect(); ///< Establish all interconnections among nodes.
   void write_asy() const; ///< Write text-file for asymptote.

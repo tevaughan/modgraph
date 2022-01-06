@@ -230,9 +230,9 @@ void graph::minimize_gradient() {
       }
       break;
     }
-    status= gsl_multimin_test_gradient(s->gradient, 1.0E-03);
+    status= gsl_multimin_test_gradient(s->gradient, 1.0E-04);
     if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
-    printf("%5d f()=%7.3f\n", iter, s->f);
+    printf("%5d f()=%8.4f\n", iter, s->f);
   } while(status == GSL_CONTINUE && iter < MAX_ITER);
 
   positions_= pos_map(s->x);
