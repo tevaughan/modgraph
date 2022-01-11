@@ -13,9 +13,6 @@ struct node {
   int next; ///< Square modulo N.
   std::vector<int> prev; ///< Inverses of square modulo N.
 
-  /// If n <= N - n, then `complement` = N - n; otherwise `complement` = -1.
-  int complement;
-
   /// Construct uninitialized node.
   node(): next(-1) {}
 };

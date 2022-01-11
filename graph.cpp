@@ -6,266 +6,13 @@
 #include "graph.hpp"
 #include <cstdlib> // rand(), RAND_MAX
 #include <fstream> // ofstream
-#include <functional> // bind
 #include <iostream> // cout, endl
 
 namespace modgraph {
 
 
-using Eigen::Map;
-using Eigen::Vector3d;
-using Eigen::VectorXd;
-using std::cerr;
 using std::cout;
 using std::endl;
-using std::vector;
-
-
-/// Calculate factors of `m`.
-/// - Include 0, which represents `m` in modular arithmetic.
-/// @param m  Positive integer whose factors are calculated.
-/// @return  List of nontrivial factors.
-vector<int> calculate_factors(int m) {
-  vector<int> f({0, 1});
-  for(int i= 2; i <= m / 2; ++i) {
-    if((m % i) == 0) f.push_back(i);
-  }
-  return f;
-}
-
-
-Vector3d graph::attraction(double k, Vector3d const &u, double r) {
-  potential_+= 0.5 * k * r * r;
-  return u * k * r;
-}
-
-
-Vector3d graph::repulsion(Vector3d const &u, double r) {
-  potential_+= 1.0 / r;
-  return -u / (r * r);
-}
-
-
-Vector3d graph::edge_attraction(int i, int j, Vector3d const &u, double r) {
-  if(nodes_[i].next == j || nodes_[j].next == i) {
-    return attraction(1.0 / edge_attract_, u, r);
-  }
-  return Vector3d::Zero();
-}
-
-
-Vector3d graph::sum_attraction(int i, int j, Vector3d const &u, double r) {
-  Vector3d f= Vector3d::Zero();
-  int const m= nodes_.size(); // Modulus.
-  int const sum= (i + j) % m;
-  static vector<int> const factors= calculate_factors(m);
-  double const c= 1.0 / sum_attract_;
-  double const b= c / m;
-  for(int n: factors) {
-    double const a= n * b;
-    if(sum == n) f+= attraction((n == 0 ? c : a), u, r);
-    if(m - sum == n) f+= attraction(a, u, r);
-  }
-  return f;
-}
-
-
-Vector3d graph::all_attraction(int i, int j, Vector3d const &u, double r) {
-  Vector3d f= Vector3d::Zero();
-  int const m= nodes_.size(); // Modulus.
-  static vector<int> const factors= calculate_factors(m);
-  double const c= 1.0 / all_attract_;
-  double const b= c / m;
-  for(int n: factors) {
-    double const a= n * b;
-    if(i == n || j == n) f+= attraction((n == 0 ? c : a), u, r);
-    if(i == m - n || j == m - n) f+= attraction(a, u, r);
-  }
-  return f;
-}
-
-
-Vector3d graph::force_and_pot(unsigned i, unsigned j, Matrix3Xd const &pos) {
-  Vector3d f= Vector3d::Zero();
-  if(i == j) return f;
-  auto const d= pos.col(j) - pos.col(i);
-  double const r= d.norm();
-  // Unit-vector from Node i toward Node j.
-  auto const u= d / r;
-  f+= repulsion(u, r); // Repulsion by inverse-square law.
-  f+= edge_attraction(i, j, u, r); // Attraction along graph-edge by spring.
-  f+= sum_attraction(i, j, u, r); // Attraction because of sum of i and j.
-  f+= all_attraction(i, j, u, r); // Attraction to 0 and 1.
-  return f;
-}
-
-
-void graph::net_force_and_pot(Matrix3Xd const &positions) {
-  unsigned const M= nodes_.size(); // Modulus.
-  forces_= MatrixXd::Zero(3 * M, M);
-  potential_= 0.0;
-  for(unsigned i= 0; i < M; ++i) {
-    for(unsigned j= i + 1; j < M; ++j) {
-      Vector3d const f= force_and_pot(i, j, positions);
-      forces_.block(i * 3, j, 3, 1)= f;
-      forces_.block(j * 3, i, 3, 1)= -f;
-    }
-  }
-  // OK to call force(unsigned) after this point.
-  net_forces_= forces_.rowwise().sum();
-}
-
-
-/// Map gsl_vector of positions into 3xN-matrix.
-/// - `pos_map` is used by f_min on each iteration of minimization.
-/// - `pos_map` is used also by minimize() to copy result back into graph.
-/// @param x  Pointer to gsl_vector that contains coordinates for N nodes.
-/// @return   Map that presents data as 3xN-matrix.
-Map<MatrixXd const> pos_map(gsl_vector const *x) {
-  if(x->size != x->size / 3 * 3) {
-    cerr << "pos_Map: ERROR: size not multiple of three" << endl;
-    throw "invalid size";
-  }
-  return Map<MatrixXd const>(x->data, 3, x->size / 3);
-}
-
-
-double graph::f(gsl_vector const *x, void *p) {
-  auto const positions= pos_map(x);
-  auto &g= *(graph *)p;
-  g.net_force_and_pot(positions);
-  return g.potential_;
-}
-
-
-#ifndef NM_SIMPLEX
-constexpr double h= 0.001;
-
-
-void graph::df(gsl_vector const *x, void *p, gsl_vector *grd) {
-  f(x, p); // Update not just potential but also forces at x.
-  auto &grph= *(graph *)p;
-  for(unsigned i= 0; i < grd->size; ++i) {
-    // Don't fully understand why negative sign is needed here. Maybe has to do
-    // with force's being the negative of the gradient of the potential.
-    gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
-  }
-}
-
-
-void graph::fdf(gsl_vector const *x, void *p, double *pot, gsl_vector *grd) {
-  *pot= f(x, p);
-  auto &grph= *(graph *)p;
-  for(unsigned i= 0; i < grd->size; ++i) {
-    // Don't fully understand why negative sign is needed here. Maybe has to do
-    // with force's being the negative of the gradient of the potential.
-    gsl_vector_set(grd, i, -grph.net_forces_(i, 0));
-  }
-}
-#endif
-
-
-#ifdef NM_SIMPLEX
-void graph::minimize_nm_simplex() {
-  constexpr int MAX_ITER= 1000000;
-  unsigned const NUM_NODES= positions_.cols();
-  unsigned const GSL_SIZE= 3 * NUM_NODES;
-
-  /* Starting point */
-  gsl_vector_view init= gsl_vector_view_array(&positions_(0, 0), GSL_SIZE);
-  gsl_vector *x= (gsl_vector *)&init;
-  cout << "x->size=" << x->size << endl;
-
-  /* Set initial step-sizes. */
-  gsl_vector *ss= gsl_vector_alloc(GSL_SIZE);
-  gsl_vector_set_all(ss, 10.0);
-
-  /* Initialize method and iterate */
-  gsl_multimin_function minex_func;
-  minex_func.n= GSL_SIZE;
-  minex_func.f= f;
-  minex_func.params= this;
-
-  gsl_multimin_fminimizer_type const *T= gsl_multimin_fminimizer_nmsimplex2;
-  gsl_multimin_fminimizer *s= gsl_multimin_fminimizer_alloc(T, GSL_SIZE);
-  gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
-
-  int status= GSL_CONTINUE;
-  int iter= 0;
-  do {
-    ++iter;
-    status= gsl_multimin_fminimizer_iterate(s);
-    if(status) {
-      if(status == GSL_ENOPROG) {
-        cerr << "GSL_ENOPROG returned from gsl_multimin_*iterate()" << endl;
-      } else {
-        cerr << "gsl_multimin_*iterate() returned " << status << endl;
-      }
-      break;
-    }
-    double const size= gsl_multimin_fminimizer_size(s);
-    status= gsl_multimin_test_size(size, 0.1);
-    if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
-    printf("%5d f()=%7.3f size=%.3f\n", iter, s->fval, size);
-  } while(status == GSL_CONTINUE && iter < MAX_ITER);
-
-  positions_= pos_map(s->x);
-  gsl_multimin_fminimizer_free(s);
-}
-#else
-void graph::minimize_gradient() {
-  constexpr int MAX_ITER= 1000000;
-  unsigned const NUM_NODES= positions_.cols();
-  unsigned const GSL_SIZE= 3 * NUM_NODES;
-
-  /* Starting point */
-  gsl_vector_view init= gsl_vector_view_array(&positions_(0, 0), GSL_SIZE);
-  gsl_vector *x= (gsl_vector *)&init;
-  cout << "x->size=" << x->size << endl;
-
-  gsl_multimin_function_fdf minex_func;
-  minex_func.n= GSL_SIZE;
-  minex_func.f= f;
-  minex_func.df= df;
-  minex_func.fdf= fdf;
-  minex_func.params= this;
-
-  gsl_multimin_fdfminimizer_type const *T=
-      gsl_multimin_fdfminimizer_conjugate_fr;
-  gsl_multimin_fdfminimizer *s= gsl_multimin_fdfminimizer_alloc(T, GSL_SIZE);
-  gsl_multimin_fdfminimizer_set(s, &minex_func, x, 1.0, 0.1);
-
-  int status= GSL_CONTINUE;
-  int iter= 0;
-  do {
-    ++iter;
-    status= gsl_multimin_fdfminimizer_iterate(s);
-    if(status) {
-      if(status == GSL_ENOPROG) {
-        cerr << "GSL_ENOPROG returned from gsl_multimin_*iterate()" << endl;
-      } else {
-        cerr << "gsl_multimin_*iterate() returned " << status << endl;
-      }
-      break;
-    }
-    status= gsl_multimin_test_gradient(s->gradient, 1.0E-04);
-    if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
-    printf("%5d f()=%8.4f\n", iter, s->f);
-  } while(status == GSL_CONTINUE && iter < MAX_ITER);
-
-  positions_= pos_map(s->x);
-  gsl_multimin_fdfminimizer_free(s);
-}
-#endif
-
-
-void graph::minimize() {
-#ifdef NM_SIMPLEX
-  minimize_nm_simplex();
-#else
-  minimize_gradient();
-#endif
-}
 
 
 void graph::write_asy() const {
@@ -274,7 +21,7 @@ void graph::write_asy() const {
   ostringstream oss;
   oss << m << ".asy";
   ofstream ofs(oss.str());
-  double const ycam= -pow(all_attract_ * nodes_.size(), 1.0 / 3.0);
+  double const ycam= -pow(minimizer_.all_attract() * nodes_.size(), 1.0 / 3.0);
   ofs << "settings.outformat = \"pdf\";\n"
       << "settings.prc = false;\n"
       << "unitsize(" << 1 << "cm);\n"
@@ -314,12 +61,6 @@ void graph::connect() {
     int const nxt_off= (cur_off * cur_off) % m; // offset of next
     nodes_[cur_off].next= nxt_off;
     nodes_[nxt_off].prev.push_back(cur_off);
-    int const complement= m - cur_off;
-    if(cur_off <= complement && complement != m) {
-      nodes_[cur_off].complement= complement;
-    } else {
-      nodes_[cur_off].complement= -1;
-    }
   }
 }
 
@@ -336,20 +77,11 @@ MatrixXd graph::init_loc(unsigned m) {
 }
 
 
-bool is_prime(int n) {
-  if(n < 2) return false;
-  for(int i= 2; i < n; ++i) {
-    if(n % i == 0) return false;
-  }
-  return true;
-}
-
-
-graph::graph(int m): positions_(init_loc(m)), nodes_(m) {
+graph::graph(int m): positions_(init_loc(m)), nodes_(m), minimizer_(nodes_) {
   if(m < 0) throw "illegal modulus";
   cout << "initializing factors" << endl;
   connect(); // Establish all interconnections among nodes.
-  minimize(); // Find final positions.
+  minimizer_.go(positions_); // Find final positions.
   write_asy(); // Write text-file for asymptote.
 }
 
