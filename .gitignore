@@ -2,6 +2,7 @@ access
 *.asy
 .ccls-cache
 .deps
+dynamic-targets.mk
 *.eps
 modgraph
 *.o

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+rm -f dynamic-targets.mk
+r="false"
+for i in $*; do
+  if echo $i | grep '^[0-9][0-9]*$' > /dev/null; then
+    r="true"
+    echo -e ".PHONY: $i\n$i: ${i}.asy\n\tasy -V $i" >> dynamic-targets.mk
+  fi
+done
+echo $r
+

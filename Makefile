@@ -8,14 +8,23 @@ LDLIBS := -lgsl
 # 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
 SRCS := $(shell ls *.cpp)
 
-.PHONY : clean
+.PHONY : all clean
+
+%.asy : modgraph
+	./modgraph `echo $@ | sed 's/.asy//'`
 
 all : modgraph
+
+DYNAMIC_TARGETS=$(shell ./dynamic-targets $(MAKECMDGOALS))
+ifeq ($(DYNAMIC_TARGETS),true)
+include dynamic-targets.mk
+endif
 
 modgraph : $(SRCS:.cpp=.o)
 
 clean :
 	@rm -fv [0-9]*.asy
+	@rm -fv dynamic-targets.mk
 	@rm -fv *.eps
 	@rm -fv modgraph
 	@rm -fv *.neato
