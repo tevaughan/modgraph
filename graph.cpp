@@ -63,8 +63,69 @@ struct sphere: public asy_adapter {
       double s= 0.25,
       string const &c= "white",
       double op= 0.5) {
-    oss_ << "draw(" << shift(v) << "*scale3(" << s << ")*unitsphere," << c
-         << "+opacity(" << op << "));\n";
+    oss_ << "draw(" << shift(v) << "*scale3(" << s << ")"
+         << "*unitsphere," << c << "+opacity(" << op << "));\n";
+  }
+};
+
+
+/// Adapter for output of label-command for a numeric label to asy-file.
+struct label: public asy_adapter {
+  /// Initialize representation of label-command as string for asy.
+  /// @param i  Number for numeric label.
+  /// @param v  Reference to position of label.
+  /// @param c  Color of label.
+  /// @param bb  True for billboard-label (camera-facing); false for embedded.
+  label(int i, Vector3d const &v, string const &c= "black", bool bb= true) {
+    string const orientation= (bb ? "Billboard" : "Embedded");
+    oss_ << "label(" << '"' << i << '"' << "," << pos(v) << "," << c << ","
+         << orientation << ");\n";
+  }
+};
+
+
+/// Adapter for output of arrow-drawing-command to asy-file.
+struct arrow: public asy_adapter {
+  /// Initialize representation of arrow-drawing-command as string for asy.
+  /// @param b  Beginning coordinates for arrow.
+  /// @param e  Ending coordinates for arrow.
+  /// @param g  Gray-level of material for arrow.
+  /// @param l  Light to use for illuminating arrow.
+  arrow(Vector3d const &b,
+      Vector3d const &e,
+      double g= 0.6,
+      string const &l= "currentlight") {
+    oss_ << "draw(" << pos(b) << "--" << pos(e) << ","
+         << "arrow=Arrow3(),"
+         << "p=gray(" << g << "),"
+         << "light=" << l << ");\n";
+  }
+};
+
+
+/// Adapter for output of perspective for current projection to asy-file.
+struct perspective: public asy_adapter {
+  /// Initialize representation of perspective as string for asy.
+  /// @param v  Camera's location.
+  perspective(Vector3d const &v) {
+    oss_ << "currentprojection = perspective" << pos(v) << ";\n";
+  }
+};
+
+
+/// Adapter for output of basic header to asy-file.
+struct header: public asy_adapter {
+  /// Initialize representation of header as string for asy.
+  /// @param ofmt  Format of output-file (when asy be not invoked with '-V').
+  /// @param prc  True if PRC-vector-graphics should be embedded in PDF.
+  /// @param unit_cm  Unit of distance (in cm).
+  header(string const &ofmt= "pdf",
+      string const &prc= "false",
+      double unit_cm= 1.0) {
+    oss_ << "settings.outformat = " << '"' << ofmt << '"' << ";\n"
+         << "settings.prc = " << prc << ";\n"
+         << "unitsize(" << unit_cm << "cm);\n"
+         << "import three;\n";
   }
 };
 
@@ -74,17 +135,13 @@ void graph::write_asy() const {
   ostringstream oss;
   oss << m << ".asy";
   ofstream ofs(oss.str());
+  ofs << header();
   double const ycam= -pow(minimizer_.all_attract() * nodes_.size(), 1.0 / 3.0);
-  ofs << "settings.outformat = \"pdf\";\n"
-      << "settings.prc = false;\n"
-      << "unitsize(" << 1 << "cm);\n"
-      << "import three;\n"
-      << "currentprojection = perspective(0," << ycam << ",0);\n";
+  ofs << perspective({0, ycam, 0});
   for(int i= 0; i < m; ++i) {
     auto const &ap= positions_.col(i);
     ofs << sphere(ap);
-    // Billboard or Embedded
-    ofs << "label(\"" << i << "\"," << pos(ap) << ",black,Billboard);\n";
+    ofs << label(i, ap);
     auto const &an= nodes_[i];
     int const j= an.next;
     if(i != j) {
@@ -92,9 +149,7 @@ void graph::write_asy() const {
       auto const ab_u= (bp - ap).normalized() * 0.25;
       auto const ab= ap + ab_u;
       auto const ba= bp - ab_u;
-      ofs << "draw(" << pos(ab) << "--" << pos(ba) << ",arrow=Arrow3()"
-          << ",p=gray(0.6)"
-          << ",light=currentlight);\n";
+      ofs << arrow(ab, ba);
     }
   }
 }
