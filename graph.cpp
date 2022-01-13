@@ -13,11 +13,64 @@ namespace modgraph {
 
 using std::cout;
 using std::endl;
+using std::ofstream;
+using std::ostream;
+using std::ostringstream;
+using std::string;
+
+
+/// Adapter for output of object as string to asy-file.
+class asy_adapter {
+protected:
+  ostringstream oss_; /// Representation of object as string for asy.
+
+  /// Integrate adapter with standard output-stream in C++.
+  /// @param s  Reference to output-stream.
+  /// @param a  Reference to adapter.
+  /// @return  Reference to modified output-stream.
+  friend ostream &operator<<(ostream &s, asy_adapter const &a) {
+    return s << a.oss_.str();
+  }
+};
+
+
+/// Adapter for output of Vector3d to asy-file as position.
+struct pos: public asy_adapter {
+  /// Initialize representation of position as string for asy.
+  /// @param v  Reference to Vector3d that stores components of position.
+  pos(Vector3d const &v) {
+    oss_ << "(" << v[0] << "," << v[1] << "," << v[2] << ")";
+  }
+};
+
+
+/// Adapter for output of Vector3d to asy-file as shift.
+struct shift: public asy_adapter {
+  /// Initialize representation of shift as string for asy.
+  /// @param v  Reference to Vector3d that stores components of shift.
+  shift(Vector3d const &v) { oss_ << "shift" << pos(v); }
+};
+
+
+/// Adapter for output of draw-command for sphere to asy-file.
+struct sphere: public asy_adapter {
+  /// Initialize representation of sphere as string for asy.
+  /// @param v  Reference to position of sphere.
+  /// @param s  Scale of sphere.
+  /// @param c  Color of sphere.
+  /// @param op  Opacity of sphere.
+  sphere(Vector3d const v,
+      double s= 0.25,
+      string const &c= "white",
+      double op= 0.5) {
+    oss_ << "draw(" << shift(v) << "*scale3(" << s << ")*unitsphere," << c
+         << "+opacity(" << op << "));\n";
+  }
+};
 
 
 void graph::write_asy() const {
   int const m= nodes_.size();
-  using namespace std;
   ostringstream oss;
   oss << m << ".asy";
   ofstream ofs(oss.str());
@@ -29,13 +82,9 @@ void graph::write_asy() const {
       << "currentprojection = perspective(0," << ycam << ",0);\n";
   for(int i= 0; i < m; ++i) {
     auto const &ap= positions_.col(i);
-    ofs << "draw(shift"
-        << "(" << ap[0] << "," << ap[1] << "," << ap[2] << ")"
-        << "*scale3(0.25)*unitsphere, white+opacity(0.5));\n";
+    ofs << sphere(ap);
     // Billboard or Embedded
-    ofs << "label(\"" << i << "\","
-        << "(" << ap[0] << "," << ap[1] << "," << ap[2] << ")"
-        << ",black,Billboard);\n";
+    ofs << "label(\"" << i << "\"," << pos(ap) << ",black,Billboard);\n";
     auto const &an= nodes_[i];
     int const j= an.next;
     if(i != j) {
@@ -43,11 +92,7 @@ void graph::write_asy() const {
       auto const ab_u= (bp - ap).normalized() * 0.25;
       auto const ab= ap + ab_u;
       auto const ba= bp - ab_u;
-      ofs << "draw("
-          << "(" << ab[0] << "," << ab[1] << "," << ab[2] << ")"
-          << "--"
-          << "(" << ba[0] << "," << ba[1] << "," << ba[2] << ")"
-          << ",arrow=Arrow3()"
+      ofs << "draw(" << pos(ab) << "--" << pos(ba) << ",arrow=Arrow3()"
           << ",p=gray(0.6)"
           << ",light=currentlight);\n";
     }
