@@ -30,7 +30,7 @@ vector<int> calculate_factors(int m) {
 }
 
 
-Vector3d minimizer::attraction(double k, Vector3d const &u, double r) {
+Vector3d minimizer::attract(double k, Vector3d const &u, double r) {
   potential_+= 0.5 * k * r * r;
   return u * k * r;
 }
@@ -42,16 +42,15 @@ Vector3d minimizer::repulsion(Vector3d const &u, double r) {
 }
 
 
-Vector3d minimizer::edge_attraction(
-    int i, int j, Vector3d const &u, double r) {
+Vector3d minimizer::edge_attract(int i, int j, Vector3d const &u, double r) {
   if(nodes_[i].next == j || nodes_[j].next == i) {
-    return attraction(1.0 / edge_attract_, u, r);
+    return attract(1.0 / edge_attract_, u, r);
   }
   return Vector3d::Zero();
 }
 
 
-Vector3d minimizer::sum_attraction(int i, int j, Vector3d const &u, double r) {
+Vector3d minimizer::sum_attract(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   int const m= nodes_.size(); // Modulus.
   int const sum= (i + j) % m;
@@ -60,23 +59,31 @@ Vector3d minimizer::sum_attraction(int i, int j, Vector3d const &u, double r) {
   double const b= c / m;
   for(int n: factors) {
     double const a= n * b;
-    if(sum == n) f+= attraction((n == 0 ? c : a), u, r);
-    if(m - sum == n) f+= attraction(a, u, r);
+    // If sum of i and j be factor of m, then attract i toward j. Attraction is
+    // usually proportional to factor but proportional to m if i or j be zero.
+    if(sum == n) f+= attract((n == 0 ? c : a), u, r);
+    // If sum of i and j be less than m by factor of m, then attract i toward
+    // j. Attraction is proportional to factor.
+    if(m - sum == n) f+= attract(a, u, r);
   }
   return f;
 }
 
 
-Vector3d minimizer::all_attraction(int i, int j, Vector3d const &u, double r) {
+Vector3d minimizer::factor_attract(int i, int j, Vector3d const &u, double r) {
   Vector3d f= Vector3d::Zero();
   int const m= nodes_.size(); // Modulus.
   static vector<int> const factors= calculate_factors(m);
-  double const c= 1.0 / all_attract_;
+  double const c= 1.0 / factor_attract_;
   double const b= c / m;
   for(int n: factors) {
     double const a= n * b;
-    if(i == n || j == n) f+= attraction((n == 0 ? c : a), u, r);
-    if(i == m - n || j == m - n) f+= attraction(a, u, r);
+    // If either i or j be factor of m, then attract i toward j. Attraction is
+    // usually proportional to factor but proportional to m if i or j be zero.
+    if(i == n || j == n) f+= attract((n == 0 ? c : a), u, r);
+    // If either i or j be less than m by factor of m, then attract i toward j.
+    // Attraction is proportional to factor.
+    if(i == m - n || j == m - n) f+= attract(a, u, r);
   }
   return f;
 }
@@ -91,9 +98,9 @@ Vector3d minimizer::force_and_pot(
   // Unit-vector from Node i toward Node j.
   auto const u= d / r;
   f+= repulsion(u, r); // Repulsion by inverse-square law.
-  f+= edge_attraction(i, j, u, r); // Attraction along graph-edge by spring.
-  f+= sum_attraction(i, j, u, r); // Attraction because of sum of i and j.
-  f+= all_attraction(i, j, u, r); // Attraction to 0 and 1.
+  f+= edge_attract(i, j, u, r); // Attraction along graph-edge by spring.
+  f+= sum_attract(i, j, u, r); // Attraction because of sum of i and j.
+  f+= factor_attract(i, j, u, r); // Attraction to 0 and 1.
   return f;
 }
 

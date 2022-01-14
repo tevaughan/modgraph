@@ -1,3 +1,4 @@
+
 /// @file       minimizer.hpp
 /// @brief      Declaration of modgraph::minimizer.
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
@@ -53,31 +54,37 @@ class minimizer {
   /// @param positions  3xN matrix for position of each of N particles.
   void net_force_and_pot(Matrix3Xd const &positions);
 
-  /// Scale of attraction between pair of nodes connected by a directed edge.
-  /// - `edge_attract_` should be larger than unity.
-  /// - `edge_attract_` is force proportional to distance.
+  /// Scale of attraction of every Node `i` to each Nodes `j` whenever either
+  /// `i` maps to `j`, or `j` maps to `i`; that is, whenever Node `i` and Node
+  /// `j` are connected by a directed edge.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
+  /// @return  Scale of attraction of every Node `i` to each Node `j` whenever
+  ///          they are connected by a directed edge.
   double edge_attract_= 1.5;
 
-  /// Scale of attraction between pair of nodes whose sum is modulus or half of
-  /// modulus.
-  /// - `sum_attract_` should be larger than unity.
-  /// - `sum_attract_` is force proportional to distance.
-  /// - Scale for forces is set by universal repulsion, which decays with
-  ///   inverse-square distance and has unit-value between two nodes whenever
-  ///   they be separated by unit distance.
+  /// Relative scale of attraction of every Node `i` to each Node `j` whenever
+  /// `(i + j) % m` is either factor `f` of modulus `m` or `m - f`.
+  /// - Attraction is usually proportional to `f` but proportional to `m`
+  ///   (greatest) if `(i + j) % m` be zero.
+  /// - Absolute scale for forces is set by universal repulsion, which decays
+  ///   with inverse-square distance and has unit-value between two nodes
+  ///   whenever they be separated by unit distance.
+  /// @return  Relative scale of attraction of every Node `i` to each Node `j`
+  ///          whenever `(i + j) % m` is either `f` or `m - f`.
   double sum_attract_= 15.0;
 
-  /// Scale of attraction between (a) each of zero and one and (b) every other
-  /// node.
-  /// - `all_attract_` should be larger than unity.
-  /// - `all_attract_` is force proportional to distance.
-  /// - Scale for forces is set by universal repulsion, which decays with
-  ///   inverse-square distance and has unit-value between two nodes whenever
-  ///   they be separated by unit distance.
-  double all_attract_= 150.0;
+  /// Relative scale of attraction of every Node `i` to each Node `j` whenever
+  /// `j` is either factor `f` of modulus `m` or `m - f`.
+  /// - Attraction is usually proportional to `f` but proportional to `m`
+  ///   (greatest) if `j` be zero.
+  /// - Absolute scale for forces is set by universal repulsion, which decays
+  ///   with inverse-square distance and has unit-value between two nodes
+  ///   whenever they be separated by unit distance.
+  /// @return  Relative scale of attraction of every Node `i` to each Node `j`
+  ///          whenever `j` is either `f` or `m` - `f`.
+  double factor_attract_= 150.0;
 
   /// Potential that GSL will minimize.
   /// - Data in `x` have same structure as data in positions_.
@@ -116,7 +123,7 @@ class minimizer {
   /// @param positions  3xN matrix for position of each of N nodes.
   void minimize_gradient(Matrix3Xd &positions);
 
-  Vector3d attraction(double k, Vector3d const &u, double r);
+  Vector3d attract(double k, Vector3d const &u, double r);
 
   /// Calculate inverse-square-distance repulsive force between felt by one
   /// node from other, and increment global potential.
@@ -132,7 +139,7 @@ class minimizer {
   /// @param u  Unit-vector from Node i toward Node j.
   /// @param r  Distance between Node i and Node j.
   /// @return  Force felt by Node i.
-  Vector3d edge_attraction(int i, int j, Vector3d const &u, double r);
+  Vector3d edge_attract(int i, int j, Vector3d const &u, double r);
 
   /// Calculate spring-attraction force felt by Node i from Node j either
   /// because (i+j)%M==f, where f is factor of modulus M, or because
@@ -142,9 +149,19 @@ class minimizer {
   /// @param u  Unit-vector from Node i toward Node j.
   /// @param r  Distance between Node i and Node j.
   /// @return  Force felt by Node i.
-  Vector3d sum_attraction(int i, int j, Vector3d const &u, double r);
+  Vector3d sum_attract(int i, int j, Vector3d const &u, double r);
 
-  Vector3d all_attraction(int i, int j, Vector3d const &u, double r);
+  /// Calculate spring-attraction force felt by Node i from Node j when either
+  /// i or j be factor of modulus or when either i or j be smaller than modulus
+  /// by factor of modulus.
+  /// - Attraction is usually proportional to factor but proportional to
+  ///   modulus itself (strongest) if i or j be zero.
+  ///   @param i  Offset of one node.
+  ///   @param j  Offset of other node.
+  ///   @param u  Unit-vector from Node i toward Node j.
+  ///   @param r  Distance between Node i and Node j.
+  ///   @return  Force felt by Node i.
+  Vector3d factor_attract(int i, int j, Vector3d const &u, double r);
 
 public:
   /// Initialize reference to relationships among nodes.
@@ -156,31 +173,37 @@ public:
   /// @param positions  3xN matrix for position of each of N nodes.
   void go(Matrix3Xd &positions);
 
-  /// Scale of attraction between pair of nodes connected by a directed edge.
+  /// Scale of attraction of every Node `i` to each Nodes `j` whenever either
+  /// `i` maps to `j`, or `j` maps to `i`; that is, whenever Node `i` and Node
+  /// `j` are connected by a directed edge.
   /// - Scale for forces is set by universal repulsion, which decays with
   ///   inverse-square distance and has unit-value between two nodes whenever
   ///   they be separated by unit distance.
-  /// @return  Scale of attraction between pair of nodes connected by
-  ///          a directed edge.
+  /// @return  Scale of attraction of every Node `i` to each Node `j` whenever
+  ///          they are connected by a directed edge.
   double edge_attract() const { return edge_attract_; }
 
-  /// Scale of attraction between pair of nodes whose sum is modulus or half of
-  /// modulus.
-  /// - Scale for forces is set by universal repulsion, which decays with
-  ///   inverse-square distance and has unit-value between two nodes whenever
-  ///   they be separated by unit distance.
-  /// @return  Scale of attraction between pair of nodes whose sum is modulus
-  ///          or half of modulus.
+  /// Relative scale of attraction of every Node `i` to each Node `j` whenever
+  /// `(i + j) % m` is either factor `f` of modulus `m` or `m - f`.
+  /// - Attraction is usually proportional to `f` but proportional to `m`
+  ///   (greatest) if `(i + j) % m` be zero.
+  /// - Absolute scale for forces is set by universal repulsion, which decays
+  ///   with inverse-square distance and has unit-value between two nodes
+  ///   whenever they be separated by unit distance.
+  /// @return  Relative scale of attraction of every Node `i` to each Node `j`
+  ///          whenever `(i + j) % m` is either `f` or `m - f`.
   double sum_attract() const { return sum_attract_; }
 
-  /// Scale of attraction between (a) each of zero and one and (b) every other
-  /// node.
-  /// - Scale for forces is set by universal repulsion, which decays with
-  ///   inverse-square distance and has unit-value between two nodes whenever
-  ///   they be separated by unit distance.
-  /// @return  Scale of attraction between (a) each of zero and one and (b)
-  ///          every other node.
-  double all_attract() const { return all_attract_; }
+  /// Relative scale of attraction of every Node `i` to each Node `j` whenever
+  /// `j` is either factor `f` of modulus `m` or `m - f`.
+  /// - Attraction is usually proportional to `f` but proportional to `m`
+  ///   (greatest) if `j` be zero.
+  /// - Absolute scale for forces is set by universal repulsion, which decays
+  ///   with inverse-square distance and has unit-value between two nodes
+  ///   whenever they be separated by unit distance.
+  /// @return  Relative scale of attraction of every Node `i` to each Node `j`
+  ///          whenever `j` is either `f` or `m` - `f`.
+  double factor_attract() const { return factor_attract_; }
 };
 
 

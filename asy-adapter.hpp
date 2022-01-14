@@ -58,7 +58,7 @@ struct sphere: public asy_adapter {
   /// @param op  Opacity of sphere.
   sphere(Vector3d const v,
       double s= 0.25,
-      string const &c= "white",
+      string const &c= "lightmagenta",
       double op= 0.5) {
     oss_ << "draw(" << shift(v) << "*scale3(" << s << ")"
          << "*unitsphere," << c << "+opacity(" << op << "));\n";
@@ -88,14 +88,11 @@ struct arrow: public asy_adapter {
   /// @param e  Ending coordinates for arrow.
   /// @param g  Gray-level of material for arrow.
   /// @param l  Light to use for illuminating arrow.
-  arrow(Vector3d const &b,
-      Vector3d const &e,
-      double g= 0.6,
-      string const &l= "currentlight") {
+  arrow(Vector3d const &b, Vector3d const &e) {
     oss_ << "draw(" << pos(b) << "--" << pos(e) << ","
-         << "arrow=Arrow3(),"
-         << "p=gray(" << g << "),"
-         << "light=" << l << ");\n";
+         << "arrow=Arrow3(size=32.0),"
+         << "p=lightcyan+linewidth(4.0),"
+         << "light=currentlight);\n";
   }
 };
 

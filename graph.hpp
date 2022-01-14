@@ -33,6 +33,12 @@ class graph {
   /// @param m  Modulus.
   void init_factors(int m);
 
+  /// Largest distance of any node from origin.
+  /// @return  Largest distance of any node from origin.
+  double biggest_radius() const {
+    return positions_.colwise().norm().maxCoeff();
+  }
+
 public:
   /// Construct graphs for modulus m.
   /// @param m  Modulus of graphs.

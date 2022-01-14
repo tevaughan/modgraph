@@ -21,21 +21,10 @@ auto filename(int m) {
 }
 
 
-/// Cube-root of number `n`.
-/// @param n  Number whose cube-root is to be found.
-/// @return  Cube-root of `n`.
-double cube_root(double n) {
-  constexpr double e= 1.0 / 3.0; // Exponent for cube-root.
-  return pow(n, e);
-}
-
-
 void graph::write_asy() const {
   int const m= nodes_.size();
   std::ofstream ofs(filename(m));
-  ofs << header();
-  double const ycam= -cube_root(minimizer_.all_attract() * m);
-  ofs << perspective({0, ycam, 0});
+  ofs << header() << perspective({0, -2.0 * biggest_radius(), 0});
   for(int i= 0; i < m; ++i) {
     auto const &ip= positions_.col(i); // Position of Node i.
     ofs << sphere(ip) << label(i, ip);
