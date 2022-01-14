@@ -20,26 +20,41 @@ using std::ostringstream;
 using std::string;
 
 
-void graph::write_asy() const {
-  int const m= nodes_.size();
+/// File-name for modulus `m`.
+/// @param m  Modulus.
+/// @return  Name of asymptote-file.
+string filename(int m) {
   ostringstream oss;
   oss << m << ".asy";
-  ofstream ofs(oss.str());
+  return oss.str();
+}
+
+
+/// Cube-root of number `n`.
+/// @param n  Number whose cube-root is to be found.
+/// @return  Cube-root of `n`.
+double cube_root(double n) {
+  constexpr double e= 1.0 / 3.0; // Exponent for cube-root.
+  return pow(n, e);
+}
+
+
+void graph::write_asy() const {
+  int const m= nodes_.size();
+  ofstream ofs(filename(m));
   ofs << header();
-  double const ycam= -pow(minimizer_.all_attract() * nodes_.size(), 1.0 / 3.0);
+  double const ycam= -cube_root(minimizer_.all_attract() * m);
   ofs << perspective({0, ycam, 0});
   for(int i= 0; i < m; ++i) {
-    auto const &ap= positions_.col(i);
-    ofs << sphere(ap);
-    ofs << label(i, ap);
-    auto const &an= nodes_[i];
-    int const j= an.next;
+    auto const &ip= positions_.col(i); // Position of Node i.
+    ofs << sphere(ip);
+    ofs << label(i, ip);
+    int const j= nodes_[i].next;
     if(i != j) {
-      auto const &bp= positions_.col(j);
-      auto const ab_u= (bp - ap).normalized() * 0.25;
-      auto const ab= ap + ab_u;
-      auto const ba= bp - ab_u;
-      ofs << arrow(ab, ba);
+      auto const &jp= positions_.col(j); // Position of Node j.
+      // ij_q is one-quarter of displacement from Node i toward Node j.
+      auto const ij_q= (jp - ip).normalized() * 0.25;
+      ofs << arrow(ip + ij_q, jp - ij_q);
     }
   }
 }
