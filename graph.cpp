@@ -7,7 +7,6 @@
 #include "asy-adapter.hpp" // asy_adapter and descendants
 #include <cstdlib> // rand(), RAND_MAX
 #include <fstream> // ofstream
-#include <iostream> // cout, endl
 
 namespace modgraph {
 
@@ -15,7 +14,7 @@ namespace modgraph {
 /// File-name for modulus `m`.
 /// @param m  Modulus.
 /// @return  Name of asymptote-file.
-std::string filename(int m) {
+auto filename(int m) {
   std::ostringstream oss;
   oss << m << ".asy";
   return oss.str();
@@ -75,7 +74,6 @@ MatrixXd graph::init_loc(unsigned m) {
 
 graph::graph(int m): positions_(init_loc(m)), nodes_(m), minimizer_(nodes_) {
   if(m < 0) throw "illegal modulus";
-  std::cout << "initializing factors" << std::endl;
   connect(); // Establish all interconnections among nodes.
   minimizer_.go(positions_); // Find final positions.
   write_asy(); // Write text-file for asymptote.
