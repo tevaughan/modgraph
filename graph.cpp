@@ -12,19 +12,11 @@
 namespace modgraph {
 
 
-using std::cout;
-using std::endl;
-using std::ofstream;
-using std::ostream;
-using std::ostringstream;
-using std::string;
-
-
 /// File-name for modulus `m`.
 /// @param m  Modulus.
 /// @return  Name of asymptote-file.
-string filename(int m) {
-  ostringstream oss;
+std::string filename(int m) {
+  std::ostringstream oss;
   oss << m << ".asy";
   return oss.str();
 }
@@ -41,14 +33,13 @@ double cube_root(double n) {
 
 void graph::write_asy() const {
   int const m= nodes_.size();
-  ofstream ofs(filename(m));
+  std::ofstream ofs(filename(m));
   ofs << header();
   double const ycam= -cube_root(minimizer_.all_attract() * m);
   ofs << perspective({0, ycam, 0});
   for(int i= 0; i < m; ++i) {
     auto const &ip= positions_.col(i); // Position of Node i.
-    ofs << sphere(ip);
-    ofs << label(i, ip);
+    ofs << sphere(ip) << label(i, ip);
     int const j= nodes_[i].next;
     if(i != j) {
       auto const &jp= positions_.col(j); // Position of Node j.
@@ -84,7 +75,7 @@ MatrixXd graph::init_loc(unsigned m) {
 
 graph::graph(int m): positions_(init_loc(m)), nodes_(m), minimizer_(nodes_) {
   if(m < 0) throw "illegal modulus";
-  cout << "initializing factors" << endl;
+  std::cout << "initializing factors" << std::endl;
   connect(); // Establish all interconnections among nodes.
   minimizer_.go(positions_); // Find final positions.
   write_asy(); // Write text-file for asymptote.

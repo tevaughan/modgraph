@@ -13,14 +13,13 @@ namespace modgraph {
 
 using Eigen::Vector3d;
 using std::ostream;
-using std::ostringstream;
 using std::string;
 
 
 /// Adapter for output of object as string to asy-file.
 class asy_adapter {
 protected:
-  ostringstream oss_; /// Representation of object as string for asy.
+  std::ostringstream oss_; /// Representation of object as string for asy.
 
   /// Integrate adapter with standard output-stream in C++.
   /// @param s  Reference to output-stream.
