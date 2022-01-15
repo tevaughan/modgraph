@@ -25,29 +25,18 @@ auto filename(int m) {
 
 
 void graph::write_asy() const {
-  int const m= nodes_.size();
-  std::ofstream ofs(filename(m));
+  std::ofstream ofs(filename(modulus_));
   ofs << header() << perspective({0, -2.0 * biggest_radius(), 0});
-  for(int i= 0; i < m; ++i) {
+  for(int i= 0; i < modulus_; ++i) {
     auto const &ip= positions_.col(i); // Position of Node i.
     ofs << sphere(ip) << label(i, ip);
-    int const j= nodes_[i].next;
+    int const j= next(i);
     if(i != j) {
       auto const &jp= positions_.col(j); // Position of Node j.
       // ij_q is one-quarter of displacement from Node i toward Node j.
       auto const ij_q= (jp - ip).normalized() * 0.25;
       ofs << arrow(ip + ij_q, jp - ij_q);
     }
-  }
-}
-
-
-void graph::connect() {
-  int const m= nodes_.size();
-  for(int cur_off= 0; cur_off < m; ++cur_off) {
-    int const nxt_off= (cur_off * cur_off) % m; // offset of next
-    nodes_[cur_off].next= nxt_off;
-    nodes_[nxt_off].prev.push_back(cur_off);
   }
 }
 
@@ -64,9 +53,8 @@ MatrixXd graph::init_loc(unsigned m) {
 }
 
 
-graph::graph(int m): positions_(init_loc(m)), nodes_(m), minimizer_(nodes_) {
+graph::graph(int m): positions_(init_loc(m)), modulus_(m), minimizer_(*this) {
   if(m < 0) throw "illegal modulus";
-  connect(); // Establish all interconnections among nodes.
   minimizer_.go(positions_); // Find final positions.
   write_asy(); // Write text-file for asymptote.
 }

@@ -8,13 +8,15 @@
 
 #pragma once
 
-#include "node.hpp" // node
 #include <eigen3/Eigen/Dense> // Matrix
 #include <gsl/gsl_multimin.h> // gsl_vector_view, gsl_vector_const_view
 #include <iostream> // cerr, endl
 #include <vector> // vector
 
 namespace modgraph {
+
+
+class graph;
 
 
 /// Information relevant to calculation of force between pair of nodes.
@@ -51,10 +53,11 @@ public:
 };
 
 
-/// Facility for force-minimization via GSL.
+/// Facility for force-minimization via GSL of nodes in directed graph of
+/// squares under modular arithmetic.
 class minimizer {
-  /// Relationships among nodes for modulus equal to nodes_.size().
-  std::vector<node> const &nodes_;
+  /// Reference to graph whose nodes are to be positioned by minimization.
+  graph &graph_;
 
   /// 3NxN matrix storing force felt by each node from each other node.
   /// - forces_ is initialized by net_force_and_pot().
@@ -152,9 +155,9 @@ class minimizer {
   Eigen::Vector3d factor_attract(node_pair const &np);
 
 public:
-  /// Initialize reference to relationships among nodes.
-  /// @param nodes  Relationships among nodes.
-  minimizer(std::vector<node> const &nodes): nodes_(nodes) {}
+  /// Initialize moduls for graph of squares.
+  /// @param g  Reference to graph whose nodes are to be positioned.
+  minimizer(graph &g): graph_(g) {}
 
   /// Compute net force felt by each node from every other node, and compute
   /// overall potential of system.

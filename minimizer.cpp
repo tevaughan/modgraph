@@ -4,6 +4,7 @@
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 
 #include "minimizer.hpp"
+#include "graph.hpp"
 
 using Eigen::Matrix3Xd;
 using Eigen::Vector3d;
@@ -41,7 +42,7 @@ Vector3d minimizer::repel(node_pair const &np) {
 Vector3d minimizer::edge_attract(node_pair const &np) {
   auto const &i= np.i();
   auto const &j= np.j();
-  if(nodes_[i].next == j || nodes_[j].next == i) {
+  if(graph_.next(i) == j || graph_.next(j) == i) {
     return attract(1.0 / edge_attract_, np);
   }
   return Vector3d::Zero();
@@ -50,7 +51,7 @@ Vector3d minimizer::edge_attract(node_pair const &np) {
 
 Vector3d minimizer::sum_attract(node_pair const &np) {
   Vector3d f= Vector3d::Zero();
-  int const m= nodes_.size(); // Modulus.
+  int const m= graph_.modulus();
   int const sum= (np.i() + np.j()) % m;
   static vector<int> const factors= calculate_factors(m);
   double const c= 1.0L / sum_attract_;
@@ -70,7 +71,7 @@ Vector3d minimizer::sum_attract(node_pair const &np) {
 
 Vector3d minimizer::factor_attract(node_pair const &np) {
   Vector3d f= Vector3d::Zero();
-  int const m= nodes_.size(); // Modulus.
+  int const m= graph_.modulus();
   static vector<int> const factors= calculate_factors(m);
   double const c= 1.0L / factor_attract_;
   double const b= c / m;
@@ -100,11 +101,11 @@ Vector3d minimizer::force_and_pot(node_pair const &np) {
 
 
 void minimizer::net_force_and_pot(Matrix3Xd const &pos) {
-  int const M= nodes_.size(); // Modulus.
-  forces_= Eigen::MatrixXd::Zero(3 * M, M);
+  int const m= graph_.modulus();
+  forces_= Eigen::MatrixXd::Zero(3 * m, m);
   potential_= 0.0;
-  for(int i= 0; i < M; ++i) {
-    for(int j= i + 1; j < M; ++j) {
+  for(int i= 0; i < m; ++i) {
+    for(int j= i + 1; j < m; ++j) {
       Vector3d const f= force_and_pot({i, j, pos.col(j) - pos.col(i)});
       forces_.block(i * 3, j, 3, 1)= f;
       forces_.block(j * 3, i, 3, 1)= -f;
