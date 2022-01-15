@@ -1,7 +1,7 @@
 
-CC := g++
-CXX := g++
-CXXFLAGS := -g -Wall -std=c++17
+CXX := g++-10
+CC := $(CXX)
+CXXFLAGS := -g -Wall -W -std=c++17 -O2
 LDLIBS := -lgsl
 
 # See

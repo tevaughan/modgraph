@@ -1,6 +1,9 @@
 
 /// @file       minimizer.hpp
-/// @brief      Declaration of modgraph::minimizer.
+///
+/// @brief      Definition of modgraph::node_pair; declaration of
+///             modgraph::minimizer.
+///
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 
 #pragma once
@@ -8,18 +11,44 @@
 #include "node.hpp" // node
 #include <eigen3/Eigen/Dense> // Matrix
 #include <gsl/gsl_multimin.h> // gsl_vector_view, gsl_vector_const_view
+#include <iostream> // cerr, endl
 #include <vector> // vector
-
-#if 0
-#define NM_SIMPLEX
-#endif
 
 namespace modgraph {
 
 
-using Eigen::Matrix3Xd;
-using Eigen::MatrixXd;
-using Eigen::Vector3d;
+/// Information relevant to calculation of force between pair of nodes.
+class node_pair {
+  int const i_; ///< Offset of one node.
+  int const j_; ///< Offset of other node.
+  double const r_; ///< Distance between Node i and Node j.
+  Eigen::Vector3d const u_; ///< Unit-vector from Node i to Node j.
+
+public:
+  /// Initialize offset of one node and other, distance between nodes, and
+  /// unit-vector from one toward other.
+  /// @param i  Offset of one node.
+  /// @param j  Offset of other node.
+  /// @param d  Displacement from one node to other.
+  node_pair(int const i, int const j, Eigen::Vector3d const &d):
+      i_(i), j_(j), r_(d.norm()), u_(d / r_) {}
+
+  /// Offset of one node.
+  /// @return  Offset of one node.
+  int i() const { return i_; }
+
+  /// Offset of other node.
+  /// @return  Offset of other node.
+  int j() const { return j_; }
+
+  /// Distance between nodes.
+  /// @return  Distance between nodes.
+  double r() const { return r_; }
+
+  /// Unit-vector from one node toward other.
+  /// @return  Unit-vector from one node toward other.
+  Eigen::Vector3d const &u() const { return u_; }
+};
 
 
 /// Facility for force-minimization via GSL.
@@ -29,11 +58,11 @@ class minimizer {
 
   /// 3NxN matrix storing force felt by each node from each other node.
   /// - forces_ is initialized by net_force_and_pot().
-  MatrixXd forces_;
+  Eigen::MatrixXd forces_;
 
   /// 3Nx1 matrix storing net force felt by each node.
   /// - net_forces_ is initialized by net_force_and_pot().
-  MatrixXd net_forces_;
+  Eigen::MatrixXd net_forces_;
 
   /// Scalar potential whose gradient produces forces.
   /// - potential_ is calculated by net_force_and_pot().
@@ -41,18 +70,9 @@ class minimizer {
 
   /// Compute force felt by Node i from Node j, and update potential_.
   /// - force_and_pot() is called by net_force_and_pot().
-  /// @param i  Offset of one node.
-  /// @param j  Offset of other node.
-  /// @return   Force felt by Node i from Node j.
-  Vector3d force_and_pot(unsigned i, unsigned j, Matrix3Xd const &positions);
-
-  /// Compute net force felt by each node from every other node, and compute
-  /// overall potential of system.
-  /// - `calc_net_force_and_pot()` takes argument (and does not directly use
-  ///   positions_) because gsl keeps its own record of positions during
-  ///   minimization.
-  /// @param positions  3xN matrix for position of each of N particles.
-  void net_force_and_pot(Matrix3Xd const &positions);
+  /// @param np  Information needed to calculate force on one node from other.
+  /// @return  Force felt by Node i from Node j.
+  Eigen::Vector3d force_and_pot(node_pair const &np);
 
   /// Scale of attraction of every Node `i` to each Nodes `j` whenever either
   /// `i` maps to `j`, or `j` maps to `i`; that is, whenever Node `i` and Node
@@ -86,92 +106,75 @@ class minimizer {
   ///          whenever `j` is either `f` or `m` - `f`.
   double factor_attract_= 150.0;
 
-  /// Potential that GSL will minimize.
-  /// - Data in `x` have same structure as data in positions_.
-  /// - However, gsl maintains its own copy of them during minimization.
-  /// @param x  Pointer to working position-components of every particle.
-  /// @param p  Pointer to instance of graph.
-  /// @return   Potential to be minimized.
-  static double f(gsl_vector const *x, void *p);
-
-#ifndef NM_SIMPLEX
-  /// Calculate gradient of potential.
-  /// - Data in `x` have same structure as data in positions_.
-  /// - However, gsl maintains its own copy of them during minimization.
-  /// @param x  Pointer to working position-components of every particle.
-  /// @param p  Pointer to instance of graph.
-  /// @param g  Pointer to (output) components of gradient.
-  static void df(gsl_vector const *x, void *p, gsl_vector *g);
-
-  /// Calculate potential to be minimized and gradient of potential.
-  /// - Data in `x` have same structure as data in positions_.
-  /// - However, gsl maintains its own copy of them during minimization.
-  /// @param x  Pointer to working position-components of every particle.
-  /// @param p  Pointer to instance of graph.
-  /// @param f  Pointer to (output) potential to be minimized.
-  /// @param g  Pointer to (output) components of gradient.
-  static void fdf(gsl_vector const *x, void *p, double *f, gsl_vector *g);
-#endif
-
   // Minimize potential via simplex method not requiring forces.
   // - This is called by minimize().
   /// @param positions  3xN matrix for position of each of N nodes.
-  void minimize_nm_simplex(Matrix3Xd &positions);
+  void minimize_nm_simplex(Eigen::Matrix3Xd &positions);
 
   // Minimize potential via gradient-method requiring forces.
   // - This is called by minimize().
   /// @param positions  3xN matrix for position of each of N nodes.
-  void minimize_gradient(Matrix3Xd &positions);
+  void minimize_gradient(Eigen::Matrix3Xd &positions);
 
-  Vector3d attract(double k, Vector3d const &u, double r);
+  /// Calculate spring-force of attraction felt by one node from another, and
+  /// increment global potential.
+  /// @param k  Spring-constant.
+  /// @param np  Information needed to calculate force on one node from other.
+  /// @return  Force felt by one node from other.
+  Eigen::Vector3d attract(double k, node_pair const &np);
 
   /// Calculate inverse-square-distance repulsive force between felt by one
   /// node from other, and increment global potential.
-  /// @param u  Unit-vector from one node to other.
-  /// @param r  Distance between nodes.
-  /// @return  Force felt by one node.
-  Vector3d repulsion(Vector3d const &u, double r);
+  /// @param np  Information needed to calculate force on one node from other.
+  /// @return  Force felt by one node from other.
+  Eigen::Vector3d repel(node_pair const &np);
 
   /// Calculate spring-attraction force felt by Node i from Node j because of
   /// directed graph-edge between them.
-  /// @param i  Offset of one node.
-  /// @param j  Offset of other node.
-  /// @param u  Unit-vector from Node i toward Node j.
-  /// @param r  Distance between Node i and Node j.
+  /// @param np  Information needed to calculate force on one node from other.
   /// @return  Force felt by Node i.
-  Vector3d edge_attract(int i, int j, Vector3d const &u, double r);
+  Eigen::Vector3d edge_attract(node_pair const &np);
 
   /// Calculate spring-attraction force felt by Node i from Node j either
   /// because (i+j)%M==f, where f is factor of modulus M, or because
   /// (i+j)%M==M-f.
-  /// @param i  Offset of one node.
-  /// @param j  Offset of other node.
-  /// @param u  Unit-vector from Node i toward Node j.
-  /// @param r  Distance between Node i and Node j.
+  /// @param np  Information needed to calculate force on one node from other.
   /// @return  Force felt by Node i.
-  Vector3d sum_attract(int i, int j, Vector3d const &u, double r);
+  Eigen::Vector3d sum_attract(node_pair const &np);
 
   /// Calculate spring-attraction force felt by Node i from Node j when either
   /// i or j be factor of modulus or when either i or j be smaller than modulus
   /// by factor of modulus.
   /// - Attraction is usually proportional to factor but proportional to
   ///   modulus itself (strongest) if i or j be zero.
-  ///   @param i  Offset of one node.
-  ///   @param j  Offset of other node.
-  ///   @param u  Unit-vector from Node i toward Node j.
-  ///   @param r  Distance between Node i and Node j.
-  ///   @return  Force felt by Node i.
-  Vector3d factor_attract(int i, int j, Vector3d const &u, double r);
+  /// @param np  Information needed to calculate force on one node from other.
+  /// @return  Force felt by Node i.
+  Eigen::Vector3d factor_attract(node_pair const &np);
 
 public:
   /// Initialize reference to relationships among nodes.
   /// @param nodes  Relationships among nodes.
   minimizer(std::vector<node> const &nodes): nodes_(nodes) {}
 
+  /// Compute net force felt by each node from every other node, and compute
+  /// overall potential of system.
+  /// - Argument is reference to gsl's own working copy of positions.
+  /// @param positions  3xN matrix for position of each of N particles.
+  void net_force_and_pot(Eigen::Matrix3Xd const &positions);
+
   /// Copy initial `positions` into gsl; drive gsl's minimizer; and
   /// then copy final values from gsl back into `positions`.
   /// @param positions  3xN matrix for position of each of N nodes.
-  void go(Matrix3Xd &positions);
+  void go(Eigen::Matrix3Xd &positions);
+
+  /// Scalar potential whose gradient produces forces.
+  /// - potential_ is calculated by net_force_and_pot().
+  /// @return  Scalar potential whose gradient produces forces.
+  double potential() const { return potential_; }
+
+  /// (i % 3)th component of net-force on (i / 3)th node.
+  /// @return  (i % 3)th component of net-force on (i / 3)th node.
+  double net_force_component(int i) const { return net_forces_(i, 0); }
 
   /// Scale of attraction of every Node `i` to each Nodes `j` whenever either
   /// `i` maps to `j`, or `j` maps to `i`; that is, whenever Node `i` and Node

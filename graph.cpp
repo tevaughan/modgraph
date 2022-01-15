@@ -11,6 +11,9 @@
 namespace modgraph {
 
 
+using Eigen::MatrixXd;
+
+
 /// File-name for modulus `m`.
 /// @param m  Modulus.
 /// @return  Name of asymptote-file.

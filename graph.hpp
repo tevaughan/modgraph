@@ -14,7 +14,7 @@ class graph {
   /// - Only initial (random) and final values are stored here.
   /// - Initial values are copied into gsl before minimization.
   /// - Final values are copied from gsl back here after minimization.
-  Matrix3Xd positions_;
+  Eigen::Matrix3Xd positions_;
 
   std::vector<node> nodes_; ///< Collection of all nodes in graph.
   minimizer minimizer_; ///< Facility for force-minimization via GSL.
@@ -25,7 +25,7 @@ class graph {
   /// Generate random locations for initialization of positions_.
   /// @param n  Number of locations.
   /// @return   Collection of random locations.
-  static MatrixXd init_loc(unsigned n);
+  static Eigen::MatrixXd init_loc(unsigned n);
 
   /// Initialize list of composite factors of modulus.
   /// - It seems best to constrain locations only on basis of composite

@@ -90,8 +90,8 @@ struct arrow: public asy_adapter {
   /// @param l  Light to use for illuminating arrow.
   arrow(Vector3d const &b, Vector3d const &e) {
     oss_ << "draw(" << pos(b) << "--" << pos(e) << ","
-         << "arrow=Arrow3(size=32.0),"
-         << "p=lightcyan+linewidth(4.0),"
+         << "arrow=Arrow3(size=10.0),"
+         << "p=lightcyan+linewidth(2.0),"
          << "light=currentlight);\n";
   }
 };
