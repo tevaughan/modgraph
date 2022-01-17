@@ -56,6 +56,12 @@ public:
 /// Facility for force-minimization via GSL of nodes in directed graph of
 /// squares under modular arithmetic.
 class minimizer {
+  /// 3xN matrix for position of each of N particles.
+  /// - Only initial (random) and final values are stored here.
+  /// - Initial values are copied into gsl before minimization.
+  /// - Final values are copied from gsl back here after minimization.
+  Eigen::Matrix3Xd positions_;
+
   /// Reference to graph whose nodes are to be positioned by minimization.
   graph &graph_;
 
@@ -154,10 +160,15 @@ class minimizer {
   /// @return  Force felt by Node i.
   Eigen::Vector3d factor_attract(node_pair const &np);
 
+  /// Generate random locations for initialization of positions_.
+  /// @param n  Number of locations.
+  /// @return   Collection of random locations.
+  static Eigen::MatrixXd init_loc(unsigned n);
+
 public:
   /// Initialize moduls for graph of squares.
   /// @param g  Reference to graph whose nodes are to be positioned.
-  minimizer(graph &g): graph_(g) {}
+  minimizer(graph &g);
 
   /// Compute net force felt by each node from every other node, and compute
   /// overall potential of system.
@@ -167,8 +178,7 @@ public:
 
   /// Copy initial `positions` into gsl; drive gsl's minimizer; and
   /// then copy final values from gsl back into `positions`.
-  /// @param positions  3xN matrix for position of each of N nodes.
-  void go(Eigen::Matrix3Xd &positions);
+  void go();
 
   /// Scalar potential whose gradient produces forces.
   /// - potential_ is calculated by net_force_and_pot().
@@ -210,6 +220,12 @@ public:
   /// @return  Relative scale of attraction of every Node `i` to each Node `j`
   ///          whenever `j` is either `f` or `m` - `f`.
   double factor_attract() const { return factor_attract_; }
+
+  /// 3xN matrix for position of each of N particles.
+  /// - Only initial (random) and final values are stored here.
+  /// - Initial values are copied into gsl before minimization.
+  /// - Final values are copied from gsl back here after minimization.
+  auto const &positions() const { return positions_; }
 };
 
 
