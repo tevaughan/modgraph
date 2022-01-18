@@ -1,0 +1,5 @@
+add_executable(VectorTest VectorTest.cpp)
+target_link_libraries(VectorTest gsl)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_COMPILER "clang++-12")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17")
