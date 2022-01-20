@@ -16,7 +16,7 @@
 #endif
 
 #include <algorithm> // swap
-#include <gsl/gsl_vector.h>
+#include <gsl/gsl_vector.h> // gsl_vector
 
 /// Namespace for C++-interface to small subset of GSL's functionality,
 /// initially just minimization, which requires using gsl_vector.
@@ -44,14 +44,14 @@ enum size_code {
 
 /// Base-class name-space for static functions.
 struct vect_base {
-  /// View of array as vector.
+  /// Construct view of C-array as vector.
   /// @param base  Pointer to first element of vector.
   /// @param n  Number of elements in vector.
   /// @param stride  Stride of vector relative to array.
   /// @return  View of array.
   static vector<VIEW> view_array(double *base, size_t n, size_t stride= 1);
 
-  /// View of immutable array as vector.
+  /// Construct view of immutable C-array as vector.
   /// @param base  Pointer to first element of immutable vector.
   /// @param n  Number of elements in vector.
   /// @param stride  Stride of vector relative to array.
@@ -59,7 +59,7 @@ struct vect_base {
   static vector<CONST_VIEW> const_view_array(
       double const *b, size_t n, size_t s= 1);
 
-  /// Linearly combine `x` into `y` in place.
+  /// Linearly combine vector `x` into vector `y` in place.
   /// @tparam X  Type of first source-vector.
   /// @tparam Y  Type of second source-vector and destination-vector.
   /// @param alpha  Coeffient of `x`.
