@@ -111,7 +111,7 @@ class Vec: public View<gsl_vview>, public Accs<Vec<S>, gsl_vector> {
 
 public:
   /// Initialize view of internal vector.
-  Vec(): View<gsl_vview>(gsl_vview_array(data_, S)) {}
+  Vec(): View<gsl_vview>(gsl_vector_view_array(data_, S)) {}
 };
 
 
