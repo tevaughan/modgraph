@@ -3,8 +3,8 @@
 ///
 /// @brief      Definition for each of
 ///             gsl::size_code,
-///             gsl::vect_base,
-///             gsl::vect_itfc, and
+///             gsl::vec_base,
+///             gsl::vec_iface, and
 ///             gsl::vector.
 
 #pragma once
@@ -23,8 +23,9 @@
 namespace gsl {
 
 
-// Forward declaration for descendant of vect_base.
-template<typename D> class vect_itfc;
+// Forward declaration for descendant of vec_base.
+template<typename D> class vec_iface;
+
 
 /// When positive, template-argument to class vector is number of elements
 /// stored inside instance of vector.
@@ -38,7 +39,7 @@ enum size_code {
 
 
 /// Forward declaration for generic template for CRTP-descendant from
-/// vect_itfc.
+/// vec_iface.
 /// - First template-argument must be positive for generic template; argument
 ///   indicates number of elements stored in instance.
 /// - However, each specialization has non-positive template-argument.
@@ -53,7 +54,7 @@ template<int S, typename V= gsl_vector_view> class vector;
 
 
 /// Base-class name-space for static functions.
-struct vect_base {
+struct vec_base {
   /// Construct view of C-array as vector.
   /// @param base  Pointer to first element of vector.
   /// @param n  Number of elements in vector.
@@ -72,42 +73,41 @@ struct vect_base {
   /// Linearly combine vector `x` into vector `y` in place.
   /// @tparam X  Type of first source-vector.
   /// @tparam Y  Type of second source-vector and destination-vector.
-  /// @param alpha  Coeffient of `x`.
+  /// @param a  Coeffient of `x`.
   /// @param x  First source-vector.
-  /// @param beta  Coefficient of `y`.
+  /// @param b  Coefficient of `y`.
   /// @param y  Second source-vector and destination-vector.
   /// @return  TBD.
   template<typename X, typename Y>
-  static int axpby(
-      double alpha, vect_itfc<X> const &x, double beta, vect_itfc<Y> &y);
+  static int axpby(double a, vec_iface<X> const &x, double b, vec_iface<Y> &y);
 
   /// Test equality of two vectors.
-  /// @tparam U  Type of one descendant of vect_itfc.
-  /// @tparam V  Type of other descendant of vect_itfc.
+  /// @tparam U  Type of one descendant of vec_iface.
+  /// @tparam V  Type of other descendant of vec_iface.
   /// @param u  Reference to one vector.
   /// @param v  Reference to other vector.
   /// @return  True only if vectors be equal.
   template<typename U, typename V>
-  static bool equal(vect_itfc<U> const &u, vect_itfc<V> const &v);
+  static bool equal(vec_iface<U> const &u, vec_iface<V> const &v);
 };
 
 
 /// Test equality of two vectors.
-/// @tparam U  Type of one descendant of vect_itfc.
-/// @tparam V  Type of other descendant of vect_itfc.
+/// @tparam U  Type of one descendant of vec_iface.
+/// @tparam V  Type of other descendant of vec_iface.
 /// @param u  Reference to one vector.
 /// @param v  Reference to other vector.
 /// @return  True only if vectors be equal.
 template<typename U, typename V>
-bool operator==(vect_itfc<U> const &u, vect_itfc<V> const &v) {
-  return vect_base::equal(u, v);
+bool operator==(vec_iface<U> const &u, vec_iface<V> const &v) {
+  return vec_base::equal(u, v);
 }
 
 
 /// Interface for every kind of vector.
-/// @tparam D  Type of descendant of `vect_itfc<D>`.
-template<typename D> class vect_itfc: public vect_base {
-  template<typename OD> friend class vect_itfc;
+/// @tparam D  Type of descendant of `vec_iface<D>`.
+template<typename D> class vec_iface: public vec_base {
+  template<typename OD> friend class vec_iface;
 
   /// Pointer to descendant's gsl_vector.
   auto *p() { return static_cast<D *>(this)->pv(); }
@@ -195,11 +195,11 @@ public:
   int fread(FILE *f) { return gsl_vector_fread(f, p()); };
 
   /// Write ASCII-formatted representation of vector to file.
-  /// @param file  Pointer to structure for buffered interface.
+  /// @param flp  Pointer to structure for buffered interface.
   /// @param fmt  printf()-style format-string.
   /// @return  Zero only on success.
-  int fprintf(FILE *file, char const *fmt) const {
-    return gsl_vector_fprintf(file, p(), fmt);
+  int fprintf(FILE *flp, char const *fmt) const {
+    return gsl_vector_fprintf(flp, p(), fmt);
   }
 
   /// Read ASCII-formatted representation of vector from file.
@@ -208,23 +208,23 @@ public:
   int fscanf(FILE *f) { return gsl_vector_fscanf(f, p()); }
 
   /// View of subvector of current vector.
-  /// @param offset  First element in subvector.
+  /// @param i  Offset of first element in subvector.
   /// @param n  Number of elements in subvector.
-  /// @param stride  Stride of subvector relative to current vector.
-  vector<VIEW> subvector(size_t offset, size_t n, size_t stride= 1);
+  /// @param s  Stride of subvector relative to current vector.
+  vector<VIEW> subvector(size_t i, size_t n, size_t s= 1);
 
   /// View of immutable subvector of current vector.
-  /// @param offset  First element in subvector.
+  /// @param i  Offset of first element in subvector.
   /// @param n  Number of elements in subvector.
-  /// @param stride  Stride of subvector relative to current vector.
+  /// @param s  Stride of subvector relative to current vector.
   vector<VIEW, gsl_vector_const_view> const_subvector(
-      size_t offset, size_t n, size_t stride= 1) const;
+      size_t i, size_t n, size_t s= 1) const;
 
   /// Copy data from source-vector whose length must be same as this vector.
   /// @tparam T  Type of source-vector.
   /// @param src  Source vector of length same as this.
   /// @return  TBD.
-  template<typename T> int memcpy(vect_itfc<T> const &src) {
+  template<typename T> int memcpy(vec_iface<T> const &src) {
     return gsl_vector_memcpy(p(), src.p());
   }
 
@@ -232,7 +232,7 @@ public:
   /// @tparam T  Type of other vector.
   /// @param w  Other vector of length same as this.
   /// @return  TBD.
-  template<typename T> int swap(vect_itfc<T> &w) {
+  template<typename T> int swap(vec_iface<T> &w) {
     return gsl_vector_swap(p(), w.p());
   }
 
@@ -252,7 +252,7 @@ public:
   /// @tparam T  Type of vector to be added into this.
   /// @param b  Vector whose contents should be added into this.
   /// @return  TBD.
-  template<typename T> int add(vect_itfc<T> const &b) {
+  template<typename T> int add(vec_iface<T> const &b) {
     return gsl_vector_add(p(), b.p());
   }
 
@@ -260,7 +260,7 @@ public:
   /// @tparam T  Type of vector to be subtracted from this.
   /// @param b  Vector whose contents should be subtracted from this.
   /// @return  TBD.
-  template<typename T> int sub(vect_itfc<T> const &b) {
+  template<typename T> int sub(vec_iface<T> const &b) {
     return gsl_vector_sub(p(), b.p());
   }
 
@@ -268,7 +268,7 @@ public:
   /// @tparam T  Type of vector to be multiplied into this.
   /// @param b  Vector whose contents should be multiplied into this.
   /// @return  TBD.
-  template<typename T> int mul(vect_itfc<T> const &b) {
+  template<typename T> int mul(vec_iface<T> const &b) {
     return gsl_vector_mul(p(), b.p());
   }
 
@@ -276,7 +276,7 @@ public:
   /// @tparam T  Type of vector to be divided into this.
   /// @param b  Vector whose contents should be divided into this.
   /// @return  TBD.
-  template<typename T> int div(vect_itfc<T> const &b) {
+  template<typename T> int div(vec_iface<T> const &b) {
     return gsl_vector_div(p(), b.p());
   }
 
@@ -284,7 +284,7 @@ public:
   /// @tparam T  Type of vector to be added into this.
   /// @param b  Vector whose contents should be added into this.
   /// @return  Reference to this vector after modification.
-  template<typename T> vect_itfc &operator+=(vect_itfc<T> const &b) {
+  template<typename T> vec_iface &operator+=(vec_iface<T> const &b) {
     add(b);
     return *this;
   }
@@ -293,7 +293,7 @@ public:
   /// @tparam T  Type of vector to be subtracted from this.
   /// @param b  Vector whose contents should be subtracted from this.
   /// @return  Reference to this vector after modification.
-  template<typename T> vect_itfc &operator-=(vect_itfc<T> const &b) {
+  template<typename T> vec_iface &operator-=(vec_iface<T> const &b) {
     sub(b);
     return *this;
   }
@@ -302,7 +302,7 @@ public:
   /// @tparam T  Type of vector to be multiplied into this.
   /// @param b  Vector whose contents should be multiplied into this.
   /// @return  Reference to this vector after modification.
-  template<typename T> vect_itfc &operator*=(vect_itfc<T> const &b) {
+  template<typename T> vec_iface &operator*=(vec_iface<T> const &b) {
     mul(b);
     return *this;
   }
@@ -311,7 +311,7 @@ public:
   /// @tparam T  Type of vector to be divided into this.
   /// @param b  Vector whose contents should be divided into this.
   /// @return  Reference to this vector after modification.
-  template<typename T> vect_itfc &operator/=(vect_itfc<T> const &b) {
+  template<typename T> vec_iface &operator/=(vec_iface<T> const &b) {
     div(b);
     return *this;
   }
@@ -324,7 +324,7 @@ public:
   /// Multiply scalar into this vector in place.
   /// @param x  Scalar to multiply into this.
   /// @return  Reference to this vector after modification.
-  vect_itfc &operator*=(double x) {
+  vec_iface &operator*=(double x) {
     scale(x);
     return *this;
   }
@@ -337,7 +337,7 @@ public:
   /// Add constant into each element of this vector in place.
   /// @param x  Constant to add into this vector.
   /// @return  Reference to this vector after modification.
-  vect_itfc &operator+=(double x) {
+  vec_iface &operator+=(double x) {
     add_constant(x);
     return *this;
   }
@@ -395,24 +395,24 @@ public:
 
 
 // Generic template.  See documentation at forward declaration.
-template<int S, typename V> class vector: public vect_itfc<vector<S, V>> {
+template<int S, typename V> class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
 
-  friend struct vect_base;
-  template<typename T> friend class vect_itfc;
+  friend struct vec_base;
+  template<typename T> friend class vec_iface;
   template<int OS, typename OV> friend class vector;
 
-  using vect_base::const_view_array;
-  using vect_itfc<vector<S, V>>::memcpy;
+  using vec_base::const_view_array;
+  using vec_iface<vector<S, V>>::memcpy;
 
   double d_[S]; ///< Storage for data.
   V view_; ///< GSL's view of data within instance of vector.
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
   gsl_vector *pv() { return &view_.vector; }
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to immutable vector.
   gsl_vector const *pv() const { return &view_.vector; }
 
@@ -420,7 +420,7 @@ public:
   /// Initialize GSL's view of static storage, but do not initialize data.
   vector(): view_(gsl_vector_view_array(d_, S)) {}
 
-  using vect_itfc<vector<S, V>>::size;
+  using vec_iface<vector<S, V>>::size;
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param d  Data to copy for initialization.
@@ -441,9 +441,9 @@ public:
 
 /// Specialization for vector with dynamic allocation of memory on
 /// construction.
-template<> class vector<DYNAMIC>: public vect_itfc<vector<DYNAMIC>> {
-  friend struct vect_base;
-  template<typename T> friend class vect_itfc;
+template<> class vector<DYNAMIC>: public vec_iface<vector<DYNAMIC>> {
+  friend struct vec_base;
+  template<typename T> friend class vec_iface;
   template<int S, typename V> friend class vector;
 
 public:
@@ -460,11 +460,11 @@ private:
 
   gsl_vector *pv_= nullptr; ///< Pointer to allocated descriptor for vector.
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
   gsl_vector *pv() { return pv_; }
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to immutable vector.
   gsl_vector const *pv() const { return pv_; }
 
@@ -543,18 +543,18 @@ public:
 
 
 /// Specialization for vector that refers to mutable, external data.
-template<typename V> class vector<VIEW, V>: public vect_itfc<vector<VIEW, V>> {
-  friend struct vect_base;
-  template<typename T> friend class vect_itfc;
+template<typename V> class vector<VIEW, V>: public vec_iface<vector<VIEW, V>> {
+  friend struct vec_base;
+  template<typename T> friend class vec_iface;
   template<int S, typename OV> friend class vector;
 
   V view_; ///< GSL's view of data outside instance.
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
   gsl_vector *pv() { return &view_.vector; }
 
-  /// Function needed by vect_itfc.
+  /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to immutable vector.
   gsl_vector const *pv() const { return &view_.vector; }
 
@@ -593,88 +593,87 @@ public:
   /// Initialize view of C-array with specified size and stride.
   /// @param d  Pointer to first element of vector and of array.
   /// @param n  Number of elements in vector.
-  /// @param str  Stride of vector relative to array.
-  vector(double *d, size_t n, size_t str= 1):
-      view_(gsl_vector_view_array_with_stride(d, str, n)) {}
+  /// @param s  Stride of vector relative to array.
+  vector(double *d, size_t n, size_t s= 1):
+      view_(gsl_vector_view_array_with_stride(d, s, n)) {}
 
   /// Initialize view of non-decayed C-array with stride.
   /// @tparam N  Number of elements in array.
   /// @param d  Pointer to first element of vector and of array.
   /// @param n  Number of elements in vector; default, 0, means to use size of
   ///           other vector divided by str.
-  /// @param str  Stride of vector relative to array.
+  /// @param s  Stride of vector relative to array.
   template<unsigned N>
-  vector(double (&d)[N], size_t n= 0, size_t str= 1):
-      view_(view(d, str, n, N)) {}
+  vector(double (&d)[N], size_t n= 0, size_t s= 1): view_(view(d, s, n, N)) {}
 
   /// Initialize view of other vector with stride.
   /// @tparam S  Size-parameter identifying type of other vector.
   /// @param v  Reference to other vector.
   /// @param n  Number of elements in vector; default, 0, means to use size of
   ///           other vector divided by str.
-  /// @param str  Stride relative to other vector.
+  /// @param s  Stride relative to other vector.
   template<int S>
-  vector(vector<S, V> &v, size_t n= 0, size_t str= 1):
-      view_(view(v.pv()->data, str, n, v.size())) {}
+  vector(vector<S, V> &v, size_t n= 0, size_t s= 1):
+      view_(view(v.pv()->data, s, n, v.size())) {}
 
   /// Initialize view of C-array with specified size and stride.
   /// @param d  Pointer to first immutable element of vector and of array.
   /// @param n  Number of elements in vector.
-  /// @param stride  Stride of vector relative to array.
-  vector(double const *d, size_t n, size_t stride= 1):
-      view_(gsl_vector_const_view_array_with_stride(d, stride, n)) {}
+  /// @param s  Stride of vector relative to array.
+  vector(double const *d, size_t n, size_t s= 1):
+      view_(gsl_vector_const_view_array_with_stride(d, s, n)) {}
 
   /// Initialize view of non-decayed C-array with stride.
   /// @tparam N  Number of elements in immutable array.
   /// @param d  Pointer to first element of vector and of array.
   /// @param n  Number of elements in vector; default, 0, means to use size of
   ///           other vector divided by stride.
-  /// @param stride  Stride of vector relative to array.
+  /// @param s  Stride of vector relative to array.
   template<unsigned N>
-  vector(double const (&d)[N], size_t n= 0, size_t stride= 1):
-      view_(const_view(d, stride, n, N)) {}
+  vector(double const (&d)[N], size_t n= 0, size_t s= 1):
+      view_(const_view(d, s, n, N)) {}
 
   /// Initialize view of other vector.
   /// @tparam S  Size-parameter identifying type of other vector.
   /// @param v  Reference to other vector.
   /// @param n  Number of elements in vector; default, 0, means to use size of
   ///           other vector divided by stride.
-  /// @param stride  Stride relative to other vector.
+  /// @param s  Stride relative to other vector.
   template<int S>
-  vector(vector<S> const &v, size_t n= 0, size_t stride= 1):
-      view_(const_view(v.pv()->data, stride, n, v.size())) {}
+  vector(vector<S> const &v, size_t n= 0, size_t s= 1):
+      view_(const_view(v.pv()->data, s, n, v.size())) {}
 };
 
 
 // Implementation for each of several member-functions.
 
-vector<VIEW> vect_base::view_array(double *base, size_t n, size_t stride) {
+vector<VIEW> vec_base::view_array(double *base, size_t n, size_t stride) {
   return gsl_vector_view_array_with_stride(base, stride, n);
 }
 
-vector<VIEW, gsl_vector_const_view> vect_base::const_view_array(
+vector<VIEW, gsl_vector_const_view> vec_base::const_view_array(
     double const *b, size_t n, size_t s) {
   return gsl_vector_const_view_array_with_stride(b, s, n);
 }
 
 template<typename T, typename U>
-int vect_base::axpby(
-    double alpha, vect_itfc<T> const &x, double beta, vect_itfc<U> &y) {
+int vec_base::axpby(
+    double alpha, vec_iface<T> const &x, double beta, vec_iface<U> &y) {
   return gsl_vector_axpby(alpha, x.p(), beta, y.p());
 }
 
 template<typename T, typename U>
-bool vect_base::equal(vect_itfc<T> const &u, vect_itfc<U> const &v) {
+bool vec_base::equal(vec_iface<T> const &u, vec_iface<U> const &v) {
   return gsl_vector_equal(u.p(), v.p());
 }
 
 template<typename D>
-vector<VIEW> vect_itfc<D>::subvector(size_t offset, size_t n, size_t stride) {
+vector<VIEW> vec_iface<D>::subvector(size_t offset, size_t n, size_t stride) {
   return gsl_vector_subvector_with_stride(p(), offset, stride, n);
 }
 
 template<typename D>
-vector<VIEW, gsl_vector_const_view> vect_itfc<D>::const_subvector(
+vector<VIEW, gsl_vector_const_view> vec_iface<D>::const_subvector(
     size_t offset, size_t n, size_t stride) const {
   return gsl_vector_const_subvector_with_stride(p(), offset, stride, n);
 }
