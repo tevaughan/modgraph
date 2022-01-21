@@ -1,8 +1,6 @@
 /// @file       gsl/vec-base.hpp
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
-///
-/// @brief      Definition for gsl::vec_base and for global functions for
-///             vectors.
+/// @brief      Declaration for gsl::vec_base and for functions for vectors.
 
 #pragma once
 

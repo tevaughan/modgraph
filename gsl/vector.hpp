@@ -2,7 +2,11 @@
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 /// @brief      Definition for gsl::vector.
 
-#pragma once
+// Use old-style include-guards instead of '#pragma once' here because we have
+// to include at bottom implementation-headers, each of which includes this
+// file so that editor is happy.
+#ifndef GSL_VECTOR_HPP
+#define GSL_VECTOR_HPP
 
 #include "vec-iface.hpp" // vec_iface
 #include <algorithm> // swap
@@ -17,17 +21,11 @@ using std::is_same_v;
 namespace gsl {
 
 
-/// Generic template. for CRTP-descendant from vec_iface.
-/// - First template-argument must be positive for generic template; argument
-///   indicates number of elements stored in instance.
-/// - However, each specialization has non-positive template-argument.
-/// @tparam S  When positive, number of elements stored in instance (no
-///            `malloc()`); otherwise, size_code indicating that elements are
-///            stored outside instance.
-/// @tparam V  Type of view used for positive `S` and for `S == VIEW`. By
-///            default, `gsl_vector_view`; for `S == VIEW`, `V` may be
-///            specified as `gsl_vector_const_view`.  The parameter `V` is
-///            ignored when `S == DYNAMIC`.
+/// Generic template for CRTP-descendant from vec_iface.
+/// - `S` indicates number of elements in instance of generic template.
+/// - However, each specialization has non-positive `S`; see gsl::size_code.
+/// @tparam S  Number of elements or code for allocation and ownership.
+/// @tparam V  Type of view; ignored when `S == DYNAMIC`.
 template<int S, typename V= gsl_vector_view>
 class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
@@ -65,8 +63,7 @@ public:
 };
 
 
-/// Specialization for vector with dynamic allocation of memory on
-/// construction.
+/// Specialization for vector with dynamic allocation on construction.
 template<> class vector<DYNAMIC>: public vec_iface<vector<DYNAMIC>> {
 public:
   /// Identifier for each of two possible allocation-methods.
@@ -233,84 +230,12 @@ using vectorv= vec_base::view<double>;
 using vectorcv= vec_base::view<double const>;
 
 
-// Implementation for each of several member-functions.
-
-
-// BEGIN functions defined in 'vec-base.hpp'.
-template<typename T>
-vec_base::view<T> vec_base::ptr_view(T *base, size_t n, size_t stride) {
-  if constexpr(is_const_v<T>) {
-    return gsl_vector_const_view_array_with_stride(base, stride, n);
-  } else {
-    return gsl_vector_view_array_with_stride(base, stride, n);
-  }
-}
-
-template<typename T, int N>
-vec_base::view<T> vec_base::arr_view(T (&b)[N], size_t n, size_t s) {
-  size_t const num= (n ? n : N / s);
-  if constexpr(is_const_v<T>) {
-    return gsl_vector_const_view_array_with_stride(b, s, num);
-  } else {
-    return gsl_vector_view_array_with_stride(b, s, num);
-  }
-}
-
-template<typename T> auto make_view(vec_iface<T> &b, size_t n, size_t s) {
-  size_t const num= (n ? n : b.size() / s);
-  if constexpr(is_const_v<decltype(*b.data())>) {
-    auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
-    return vectorcv(v);
-  } else {
-    auto v= gsl_vector_view_array_with_stride(b.data(), s, num);
-    return vectorv(v);
-  }
-}
-
-template<typename T>
-auto make_view(vec_iface<T> const &b, size_t n, size_t s) {
-  size_t const num= (n ? n : b.size() / s);
-  auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
-  return vectorcv(v);
-}
-
-template<typename T, typename U>
-int axpby(double alpha, vec_iface<T> const &x, double beta, vec_iface<U> &y) {
-  return gsl_vector_axpby(alpha, x.p(), beta, y.p());
-}
-
-template<typename T, typename U>
-bool equal(vec_iface<T> const &u, vec_iface<U> const &v) {
-  return gsl_vector_equal(u.p(), v.p());
-}
-
-template<typename D, typename S>
-int memcpy(vec_iface<D> &dst, vec_iface<S> const &src) {
-  return gsl_vector_memcpy(dst.p(), src.p());
-}
-
-template<typename V, typename W> int swap(vec_iface<V> &v, vec_iface<W> &w) {
-  return gsl_vector_swap(v.p(), w.p());
-}
-
-template<typename U, typename V>
-bool operator==(vec_iface<U> const &u, vec_iface<V> const &v) {
-  return equal(u, v);
-}
-// END functions defined in 'vec-base.hpp'.
-
-
-template<typename D>
-vectorv vec_iface<D>::subvector(size_t offset, size_t n, size_t stride) {
-  return gsl_vector_subvector_with_stride(p(), offset, stride, n);
-}
-
-template<typename D>
-vectorcv vec_iface<D>::subvector(
-    size_t offset, size_t n, size_t stride) const {
-  return gsl_vector_const_subvector_with_stride(p(), offset, stride, n);
-}
-
 } // namespace gsl
+
+#endif // ndef GSL_VECTOR_HPP
+
+// Implementations, each relying on definition of vector defined above.
+#include "impl/vec-base-impl.hpp"
+#include "impl/vec-iface-impl.hpp"
 
 // EOF
