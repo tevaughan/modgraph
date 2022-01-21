@@ -5,6 +5,7 @@
 #include "vector.hpp"
 #include <catch.hpp>
 
+using gsl::memcpy;
 using gsl::vec_base;
 using gsl::vec_iface;
 
@@ -25,8 +26,9 @@ void check(double const *a, vec_iface<T> const &b, size_t s= 1) {
 
 TEST_CASE("vec_base works properly.", "[vec_base]") {
   double a[]= {1, 1, 2, 3, 5, 8};
+  double const *b= a;
 
-  auto pv= vec_base::ptr_view(a, 3, 2);
+  auto pv= vec_base::ptr_view(b, 3, 2);
   REQUIRE(pv.size() == 3);
   check(a, pv, 2);
 
@@ -45,6 +47,15 @@ TEST_CASE("vec_base works properly.", "[vec_base]") {
   check(a, mv1, 2);
 
   REQUIRE(pv == mv1);
+
+  auto const &av3= av2;
+  auto mv2= make_view(av3);
+  REQUIRE(mv2.size() == av3.size());
+  REQUIRE(mv2 == av3);
+
+  double c[]= {9, 8, 7, 6, 5, 4};
+  memcpy(av2, vec_base::arr_view(c));
+  REQUIRE(vec_base::ptr_view(a, 6) == vec_base::ptr_view(c, 6));
 }
 
 
