@@ -10,10 +10,9 @@
 
 #include "vec-iface.hpp" // vec_iface
 #include <algorithm> // swap
-#include <type_traits> // is_const_v, is_same_v, enable_if_t
+#include <type_traits> // is_same_v, enable_if_t
 
 using std::enable_if_t;
-using std::is_const_v;
 using std::is_same_v;
 
 /// Namespace for C++-interface to small subset of GSL's functionality,
