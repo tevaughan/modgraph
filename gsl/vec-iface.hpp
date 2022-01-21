@@ -5,6 +5,7 @@
 #pragma once
 
 #include "vec-base.hpp"
+#include "vec-iterator.hpp"
 
 namespace gsl {
 
@@ -12,11 +13,19 @@ namespace gsl {
 /// Interface for every kind of vector.
 /// @tparam D  Type of descendant of `vec_iface<D>`.
 template<typename D> struct vec_iface: public vec_base {
-  /// Pointer to descendant's gsl_vector.
-  auto *p() { return static_cast<D *>(this)->pv(); }
+  using iterator= vec_iterator<vec_iface, double>;
+  using const_iterator= vec_iterator<vec_iface const, double const>;
 
-  /// Pointer to descendant's immutable gsl_vector.
-  auto const *p() const { return static_cast<D const *>(this)->pv(); }
+  iterator begin() { return iterator(*this, 0); }
+  iterator end() { return iterator(*this, size()); }
+  const_iterator begin() const { return const_iterator(*this, 0); }
+  const_iterator end() const { return const_iterator(*this, size()); }
+
+  /// Pointer to descendant's C-interface gsl_vector.
+  gsl_vector *p() { return static_cast<D *>(this)->pv(); }
+
+  /// Pointer to descendant's immutable C-interface gsl_vector.
+  gsl_vector const *p() const { return static_cast<D const *>(this)->pv(); }
 
   /// Size of vector.
   /// @return  Size of vector.

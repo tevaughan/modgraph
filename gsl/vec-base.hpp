@@ -60,10 +60,6 @@ struct vec_base {
   /// @tparam T  Each element's type, either `double` or `double const`.
   template<typename T> using view= typename view_aux<T>::type;
 
-  /// Specification of raw-GSL view in terms of element-type.
-  /// @tparam T  Each element's type, either `double` or `double const`.
-  template<typename T> using raw_view= typename view_aux<T>::raw_type;
-
   /// Construct view of C-array.
   /// @tparam T  Type of each element.
   /// @param b  Pointer to first element of vector.
