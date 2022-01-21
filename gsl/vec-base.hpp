@@ -4,21 +4,12 @@
 
 #pragma once
 
-// Use inline-definition of each accessor-function.
-// - Define this before including `gsl_vector.h`.
-#ifndef HAVE_INLINE
-#define HAVE_INLINE
-#endif
-
-#include "size-code.hpp" // VIEW
-#include <gsl/gsl_vector.h> // gsl_vector_view, gsl_vector_const_view
+#include "view-aux.hpp" // view_aux
 
 namespace gsl {
 
 
-// Forward-declarations.
-template<typename D> struct vec_iface;
-template<int S, typename V> class vector;
+template<typename D> struct vec_iface; // Forward-declaration.
 
 
 /// Base-class name-space for static functions.
@@ -32,33 +23,9 @@ template<int S, typename V> class vector;
 ///   vector-types can reside at root of namespace gsl and need not reside
 ///   under vec_base.
 struct vec_base {
-  /// Generic structure used to translate type of element into type of view.
-  /// - Template-type parameter `T` must be either `double` or `double const`.
-  /// - No other choice is presently supported.
-  /// @tparam T  Type of each element in view.
-  template<typename T> struct view_aux;
-
-  /// Specialization corresponding to `gsl_vector_view`.
-  template<> struct view_aux<double> {
-    /// Raw-GSL view associated with element-type `double`.
-    using raw_type= gsl_vector_view;
-
-    /// View associated with element-type `double`.
-    using type= vector<VIEW, raw_type>;
-  };
-
-  /// Specialization corresponding to `gsl_vector_const_view`.
-  template<> struct view_aux<double const> {
-    /// Raw-GSL view associated with element-type `double const`.
-    using raw_type= gsl_vector_const_view;
-
-    /// View associated with element-type `double const`.
-    using type= vector<VIEW, raw_type>;
-  };
-
   /// Specification of view in terms of element-type.
   /// @tparam T  Each element's type, either `double` or `double const`.
-  template<typename T> using view= typename view_aux<T>::type;
+  template<typename T> using view= typename view_aux<T>::vector_type;
 
   /// Construct view of C-array.
   /// @tparam T  Type of each element.
