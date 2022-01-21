@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include <algorithm> // swap
 #include "vec-iface.hpp" // vec_iface
+#include <algorithm> // swap
+#include <type_traits> // is_const_v, is_same_v, enable_if_t
+
+using std::enable_if_t;
+using std::is_const_v;
+using std::is_same_v;
 
 /// Namespace for C++-interface to small subset of GSL's functionality,
 /// initially just minimization, which requires using gsl_vector.
@@ -26,17 +31,12 @@ namespace gsl {
 template<int S, typename V= gsl_vector_view>
 class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
-
-  friend struct vec_base;
-  template<typename T> friend class vec_iface;
-  template<int OS, typename OV> friend class vector;
-
-  using vec_base::const_view_array;
-  using vec_iface<vector<S, V>>::memcpy;
+  using vec_base::arr_view;
 
   double d_[S]; ///< Storage for data.
   V view_; ///< GSL's view of data within instance of vector.
 
+public:
   /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
   gsl_vector *pv() { return &view_.vector; }
@@ -45,25 +45,22 @@ class vector: public vec_iface<vector<S, V>> {
   /// @return  Pointer to GSL's interface to immutable vector.
   gsl_vector const *pv() const { return &view_.vector; }
 
-public:
   /// Initialize GSL's view of static storage, but do not initialize data.
   vector(): view_(gsl_vector_view_array(d_, S)) {}
 
-  using vec_iface<vector<S, V>>::size;
-
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param d  Data to copy for initialization.
-  vector(double const (&d)[S]): vector() { memcpy(const_view_array(d, S)); }
+  vector(double const (&d)[S]): vector() { memcpy(*this, arr_view(d)); }
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param v  Data to copy for initialization.
-  vector(vector const &v): vector() { memcpy(v); }
+  vector(vector const &v): vector() { memcpy(*this, v); }
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param v  Data to copy for initialization.
   vector &operator=(vector const &v) {
     view_= gsl_vector_view_array(d_, S);
-    memcpy(v);
+    memcpy(*this, v);
   }
 };
 
@@ -71,10 +68,6 @@ public:
 /// Specialization for vector with dynamic allocation of memory on
 /// construction.
 template<> class vector<DYNAMIC>: public vec_iface<vector<DYNAMIC>> {
-  friend struct vec_base;
-  template<typename T> friend class vec_iface;
-  template<int S, typename V> friend class vector;
-
 public:
   /// Identifier for each of two possible allocation-methods.
   enum class alloc_type {
@@ -88,14 +81,6 @@ private:
   alloc_type alloc_type_= alloc_type::ALLOC;
 
   gsl_vector *pv_= nullptr; ///< Pointer to allocated descriptor for vector.
-
-  /// Function needed by vec_iface.
-  /// @return  Pointer to GSL's interface to vector.
-  gsl_vector *pv() { return pv_; }
-
-  /// Function needed by vec_iface.
-  /// @return  Pointer to GSL's interface to immutable vector.
-  gsl_vector const *pv() const { return pv_; }
 
   /// Deallocate vector and its descriptor.
   void free() {
@@ -113,6 +98,14 @@ private:
   }
 
 public:
+  /// Function needed by vec_iface.
+  /// @return  Pointer to GSL's interface to vector.
+  gsl_vector *pv() { return pv_; }
+
+  /// Function needed by vec_iface.
+  /// @return  Pointer to GSL's interface to immutable vector.
+  gsl_vector const *pv() const { return pv_; }
+
   /// Allocate vector and its descriptor.
   /// @param n  Number of elements in vector.
   /// @param a  Method to use for allocation.
@@ -128,7 +121,7 @@ public:
   template<int S, typename V>
   vector(vector<S, V> const &src): alloc_type_(alloc_type::ALLOC) {
     pv_= allocate(src.pv()->size);
-    memcpy(src);
+    memcpy(*this, src);
   }
 
   /// Move on construction.
@@ -149,7 +142,7 @@ public:
   template<int S, typename V> vector &operator=(vector<S, V> const &src) {
     alloc_type_= alloc_type::ALLOC;
     pv_= allocate(src.pv()->size);
-    memcpy(src);
+    memcpy(*this, src);
     return *this;
   }
 
@@ -173,12 +166,9 @@ public:
 
 /// Specialization for vector that refers to mutable, external data.
 template<typename V> class vector<VIEW, V>: public vec_iface<vector<VIEW, V>> {
-  friend struct vec_base;
-  template<typename T> friend class vec_iface;
-  template<int S, typename OV> friend class vector;
-
   V view_; ///< GSL's view of data outside instance.
 
+public:
   /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
   gsl_vector *pv() { return &view_.vector; }
@@ -189,134 +179,137 @@ template<typename V> class vector<VIEW, V>: public vec_iface<vector<VIEW, V>> {
 
   /// Constructor called by subvector() and view_array().
   /// @param v  View to copy.
-  vector(gsl_vector_view const &v): view_(v) {}
+  vector(gsl_vector_view v): view_(v) {}
 
   /// Constructor called by const_subvector() and const_view_array().
-  vector(gsl_vector_const_view const &v): view_(v) {}
+  vector(gsl_vector_const_view v): view_(v) {}
 
-  /// Construct view from pointer, stride, commanded size of view, and maximum
-  /// number of bytes across underlying buffer.
-  /// - When num == 0, cause number of elements in view to be max/str;
-  ///   otherwise, use num.
-  /// @param dat  Pointer to first element.
-  /// @param str  Stride across underlying buffer.
-  /// @param num  Commanded number of elements in view.
-  /// @param max  Number of elements in underlying buffer.
-  static V view(double *dat, size_t str, size_t num, size_t max) {
-    return gsl_vector_view_array_with_stride(dat, str, num ? num : max / str);
-  }
-
-  /// Construct view from pointer to immutable data, stride, commanded size of
-  /// view, and maximum number of bytes across underlying buffer.
-  /// - When num == 0, cause number of elements in view to be max/str;
-  ///   otherwise, use num.
-  /// @param d  Pointer to first element.
-  /// @param s  Stride across underlying buffer.
-  /// @param n  Commanded number of elements in view.
-  /// @param m  Number of elements in underlying buffer.
-  static V const_view(double const *d, size_t s, size_t n, size_t m) {
-    return gsl_vector_const_view_array_with_stride(d, s, n ? n : m / s);
-  }
-
-public:
-  /// Initialize view of C-array with specified size and stride.
-  /// @param d  Pointer to first element of vector and of array.
+  /// Initialize view of C-array.
+  /// @tparam T  Type of each element.
+  /// @param d  Pointer to first element of view and of array.
   /// @param n  Number of elements in vector.
   /// @param s  Stride of vector relative to array.
-  vector(double *d, size_t n, size_t s= 1):
-      view_(gsl_vector_view_array_with_stride(d, s, n)) {}
+  template<typename T>
+  vector(T *d, size_t n, size_t s= 1): view_(ptr_view(d, n, s).view_) {}
 
-  /// Initialize view of non-decayed C-array with stride.
+  /// Initialize view of non-decayed C-array.
+  /// @tparam T  Type of each element.
   /// @tparam N  Number of elements in array.
-  /// @param d  Pointer to first element of vector and of array.
-  /// @param n  Number of elements in vector; default, 0, means to use size of
-  ///           other vector divided by str.
+  /// @param d  Pointer to first element of view and of array.
+  /// @param n  Number of elements in view; 0 means `N/s`.
   /// @param s  Stride of vector relative to array.
-  template<unsigned N>
-  vector(double (&d)[N], size_t n= 0, size_t s= 1): view_(view(d, s, n, N)) {}
+  template<typename T, int N>
+  vector(T (&d)[N], size_t n= 0, size_t s= 1):
+      view_(arr_view(d, n, s).view_) {}
 
-  /// Initialize view of other vector with stride.
-  /// @tparam S  Size-parameter identifying type of other vector.
-  /// @param v  Reference to other vector.
-  /// @param n  Number of elements in vector; default, 0, means to use size of
-  ///           other vector divided by str.
-  /// @param s  Stride relative to other vector.
-  template<int S>
-  vector(vector<S, V> &v, size_t n= 0, size_t s= 1):
-      view_(view(v.pv()->data, s, n, v.size())) {}
+  /// Initialize view of vector.
+  /// @tparam S  Size (or size-code) of vector.
+  /// @tparam T  Raw type of view.
+  /// @param v  Reference to vector.
+  /// @param n  Number of elements in view; 0 means `v.size()/s`.
+  /// @param s  Stride relative to vector.
+  template<int S, typename T, typename= enable_if_t<is_same_v<V, T>>>
+  vector(vec_iface<vector<S, T>> &v, size_t n= 0, size_t s= 1):
+      view_(make_view(v, n, s).view_) {}
 
-  /// Initialize view of C-array with specified size and stride.
-  /// @param d  Pointer to first immutable element of vector and of array.
-  /// @param n  Number of elements in vector.
-  /// @param s  Stride of vector relative to array.
-  vector(double const *d, size_t n, size_t s= 1):
-      view_(gsl_vector_const_view_array_with_stride(d, s, n)) {}
-
-  /// Initialize view of non-decayed C-array with stride.
-  /// @tparam N  Number of elements in immutable array.
-  /// @param d  Pointer to first element of vector and of array.
-  /// @param n  Number of elements in vector; default, 0, means to use size of
-  ///           other vector divided by stride.
-  /// @param s  Stride of vector relative to array.
-  template<unsigned N>
-  vector(double const (&d)[N], size_t n= 0, size_t s= 1):
-      view_(const_view(d, s, n, N)) {}
-
-  /// Initialize view of other vector.
-  /// @tparam S  Size-parameter identifying type of other vector.
-  /// @param v  Reference to other vector.
-  /// @param n  Number of elements in vector; default, 0, means to use size of
-  ///           other vector divided by stride.
-  /// @param s  Stride relative to other vector.
-  template<int S>
-  vector(vector<S> const &v, size_t n= 0, size_t s= 1):
-      view_(const_view(v.pv()->data, s, n, v.size())) {}
+  /// Initialize view of vector.
+  /// @tparam T  Type of vector.
+  /// @param v  Reference to vector.
+  /// @param n  Number of elements in view; 0 means `v.size()/s`.
+  /// @param s  Stride relative to vector.
+  template<typename T>
+  vector(vec_iface<T> const &v, size_t n= 0, size_t s= 1):
+      view_(make_view(v, n, s).view_) {}
 };
+
+
+/// Short-hand for vector with ownership of dynamically allocated storage.
+using vectord= vector<DYNAMIC>;
+
+/// Short-hand for vector without ownership of mutable storage.
+using vectorv= vec_base::view<double>;
+
+/// Short-hand for vector without ownership of immutable storage.
+using vectorcv= vec_base::view<double const>;
 
 
 // Implementation for each of several member-functions.
 
-vector<VIEW> vec_base::view_array(double *base, size_t n, size_t stride) {
-  return gsl_vector_view_array_with_stride(base, stride, n);
+
+// BEGIN functions defined in 'vec-base.hpp'.
+template<typename T>
+vec_base::view<T> vec_base::ptr_view(T *base, size_t n, size_t stride) {
+  if constexpr(is_const_v<T>) {
+    return gsl_vector_const_view_array_with_stride(base, stride, n);
+  } else {
+    return gsl_vector_view_array_with_stride(base, stride, n);
+  }
 }
 
-vector<VIEW, gsl_vector_const_view> vec_base::const_view_array(
-    double const *b, size_t n, size_t s) {
-  return gsl_vector_const_view_array_with_stride(b, s, n);
+template<typename T, int N>
+vec_base::view<T> vec_base::arr_view(T (&b)[N], size_t n, size_t s) {
+  size_t const num= (n ? n : N / s);
+  if constexpr(is_const_v<T>) {
+    return gsl_vector_const_view_array_with_stride(b, s, num);
+  } else {
+    return gsl_vector_view_array_with_stride(b, s, num);
+  }
+}
+
+template<typename T> auto make_view(vec_iface<T> &b, size_t n, size_t s) {
+  size_t const num= (n ? n : b.size() / s);
+  if constexpr(is_const_v<decltype(*b.data())>) {
+    auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
+    return vectorcv(v);
+  } else {
+    auto v= gsl_vector_view_array_with_stride(b.data(), s, num);
+    return vectorv(v);
+  }
+}
+
+template<typename T>
+auto make_view(vec_iface<T> const &b, size_t n, size_t s) {
+  size_t const num= (n ? n : b.size() / s);
+  auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
+  return vectorcv(v);
 }
 
 template<typename T, typename U>
-int vec_base::axpby(
-    double alpha, vec_iface<T> const &x, double beta, vec_iface<U> &y) {
+int axpby(double alpha, vec_iface<T> const &x, double beta, vec_iface<U> &y) {
   return gsl_vector_axpby(alpha, x.p(), beta, y.p());
 }
 
 template<typename T, typename U>
-bool vec_base::equal(vec_iface<T> const &u, vec_iface<U> const &v) {
+bool equal(vec_iface<T> const &u, vec_iface<U> const &v) {
   return gsl_vector_equal(u.p(), v.p());
 }
 
+template<typename D, typename S>
+int memcpy(vec_iface<D> &dst, vec_iface<S> const &src) {
+  return gsl_vector_memcpy(dst.p(), src.p());
+}
+
+template<typename V, typename W> int swap(vec_iface<V> &v, vec_iface<W> &w) {
+  return gsl_vector_swap(v.p(), w.p());
+}
+
+template<typename U, typename V>
+bool operator==(vec_iface<U> const &u, vec_iface<V> const &v) {
+  return equal(u, v);
+}
+// END functions defined in 'vec-base.hpp'.
+
+
 template<typename D>
-vector<VIEW> vec_iface<D>::subvector(size_t offset, size_t n, size_t stride) {
+vectorv vec_iface<D>::subvector(size_t offset, size_t n, size_t stride) {
   return gsl_vector_subvector_with_stride(p(), offset, stride, n);
 }
 
 template<typename D>
-vector<VIEW, gsl_vector_const_view> vec_iface<D>::const_subvector(
+vectorcv vec_iface<D>::subvector(
     size_t offset, size_t n, size_t stride) const {
   return gsl_vector_const_subvector_with_stride(p(), offset, stride, n);
 }
-
-
-/// Short-hand for vector with storage dynamically allocated on construction.
-using vectord= vector<DYNAMIC>;
-
-/// Short-hand for vector with mutable storage outside instance.
-using vectorv= vector<VIEW>;
-
-/// Short-hand for vector with immutable storage outside instance.
-using vectorcv= vector<VIEW, gsl_vector_const_view>;
-
 
 } // namespace gsl
 

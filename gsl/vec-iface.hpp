@@ -11,16 +11,13 @@ namespace gsl {
 
 /// Interface for every kind of vector.
 /// @tparam D  Type of descendant of `vec_iface<D>`.
-template<typename D> class vec_iface: public vec_base {
-  template<typename OD> friend class vec_iface;
-
+template<typename D> struct vec_iface: public vec_base {
   /// Pointer to descendant's gsl_vector.
   auto *p() { return static_cast<D *>(this)->pv(); }
 
   /// Pointer to descendant's immutable gsl_vector.
   auto const *p() const { return static_cast<D const *>(this)->pv(); }
 
-public:
   /// Size of vector.
   /// @return  Size of vector.
   size_t size() const { return p()->size; }
@@ -116,30 +113,13 @@ public:
   /// @param i  Offset of first element in subvector.
   /// @param n  Number of elements in subvector.
   /// @param s  Stride of subvector relative to current vector.
-  vector<VIEW, gsl_vector_view> subvector(size_t i, size_t n, size_t s= 1);
+  view<double> subvector(size_t i, size_t n, size_t s= 1);
 
   /// View of immutable subvector of current vector.
   /// @param i  Offset of first element in subvector.
   /// @param n  Number of elements in subvector.
   /// @param s  Stride of subvector relative to current vector.
-  vector<VIEW, gsl_vector_const_view> const_subvector(
-      size_t i, size_t n, size_t s= 1) const;
-
-  /// Copy data from source-vector whose length must be same as this vector.
-  /// @tparam T  Type of source-vector.
-  /// @param src  Source vector of length same as this.
-  /// @return  TBD.
-  template<typename T> int memcpy(vec_iface<T> const &src) {
-    return gsl_vector_memcpy(p(), src.p());
-  }
-
-  /// Swap contents of this and other vector, each with same length.
-  /// @tparam T  Type of other vector.
-  /// @param w  Other vector of length same as this.
-  /// @return  TBD.
-  template<typename T> int swap(vec_iface<T> &w) {
-    return gsl_vector_swap(p(), w.p());
-  }
+  view<double const> subvector(size_t i, size_t n, size_t s= 1) const;
 
   /// Swap elements within this vector.
   /// @param i  Offset of one element.

@@ -2,6 +2,8 @@
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 /// @brief      Definition for gsl::size_code.
 
+#pragma once
+
 namespace gsl {
 
 

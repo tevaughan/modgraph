@@ -22,7 +22,7 @@ void check(double const *a, vec_iface<T> const &b, size_t s= 1) {
 
 TEST_CASE("vec_base works properly.", "[vec_base]") {
   double a[]= {1, 1, 2, 3, 5, 8};
-  auto b= vec_base::view_array(a);
+  auto b= vec_base::arr_view(a);
   check(a, b);
 }
 

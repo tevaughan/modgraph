@@ -1,4 +1,4 @@
-add_executable(tests test-main.cpp vector-test.cpp)
+add_executable(tests test-main.cpp vec-base-test.cpp vector-test.cpp)
 target_link_libraries(tests gsl)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_COMPILER "clang++-12")
