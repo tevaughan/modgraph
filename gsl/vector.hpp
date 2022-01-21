@@ -12,12 +12,7 @@
 namespace gsl {
 
 
-// Forward declaration for descendant of vec_base.
-template<typename D> class vec_iface;
-
-
-/// Forward declaration for generic template for CRTP-descendant from
-/// vec_iface.
+/// Generic template. for CRTP-descendant from vec_iface.
 /// - First template-argument must be positive for generic template; argument
 ///   indicates number of elements stored in instance.
 /// - However, each specialization has non-positive template-argument.
@@ -28,11 +23,8 @@ template<typename D> class vec_iface;
 ///            default, `gsl_vector_view`; for `S == VIEW`, `V` may be
 ///            specified as `gsl_vector_const_view`.  The parameter `V` is
 ///            ignored when `S == DYNAMIC`.
-template<int S, typename V= gsl_vector_view> class vector;
-
-
-// Generic template.  See documentation at forward declaration.
-template<int S, typename V> class vector: public vec_iface<vector<S, V>> {
+template<int S, typename V= gsl_vector_view>
+class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
 
   friend struct vec_base;
