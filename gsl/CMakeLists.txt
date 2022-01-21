@@ -1,5 +1,5 @@
-add_executable(Test testMain.cpp vectorTest.cpp)
-target_link_libraries(Test gsl)
+add_executable(tests test-main.cpp vector-test.cpp)
+target_link_libraries(tests gsl)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_COMPILER "clang++-12")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17")

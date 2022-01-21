@@ -1,4 +1,4 @@
-/// @file       gsl/vectorTest.cpp
+/// @file       gsl/vector-test.cpp
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 /// @brief      Tests for gsl::vector.
 
