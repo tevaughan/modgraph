@@ -89,17 +89,6 @@ struct vect_base {
   /// @return  True only if vectors be equal.
   template<typename U, typename V>
   static bool equal(vect_itfc<U> const &u, vect_itfc<V> const &v);
-
-  /// Number of elements to initialize in view with stride.
-  /// - If `num` be zero, then return `siz/str`; otherwise, return `num`.
-  /// @param siz  Size of array or vector serving as base of view.
-  /// @param num  Number of elements specified for view.
-  /// @param str  Stride of view over base.
-  /// @return  Number of elements in view.
-  static int num_with_stride(int siz, int num, int str) {
-    if(num == 0) return siz / str;
-    return num;
-  }
 };
 
 
@@ -118,6 +107,8 @@ bool operator==(vect_itfc<U> const &u, vect_itfc<V> const &v) {
 /// Interface for every kind of vector.
 /// @tparam D  Type of descendant of `vect_itfc<D>`.
 template<typename D> class vect_itfc: public vect_base {
+  template<typename OD> friend class vect_itfc;
+
   /// Pointer to descendant's gsl_vector.
   auto *p() { return static_cast<D *>(this)->pv(); }
 
@@ -412,7 +403,7 @@ template<int S, typename V> class vector: public vect_itfc<vector<S, V>> {
   template<int OS, typename OV> friend class vector;
 
   using vect_base::const_view_array;
-  using vect_base::num_with_stride;
+  using vect_itfc<vector<S, V>>::memcpy;
 
   double d_[S]; ///< Storage for data.
   V view_; ///< GSL's view of data within instance of vector.
@@ -433,22 +424,17 @@ public:
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param d  Data to copy for initialization.
-  vector(double const (&d)[S]): vector() {
-    auto const v= const_view_array(d, S);
-    gsl_vector_memcpy(&view_.vector, &v.view_.vector);
-  }
+  vector(double const (&d)[S]): vector() { memcpy(const_view_array(d, S)); }
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param v  Data to copy for initialization.
-  vector(vector const &v): vector() {
-    gsl_vector_memcpy(&view_.vector, &v.view_.vector);
-  }
+  vector(vector const &v): vector() { memcpy(v); }
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param v  Data to copy for initialization.
   vector &operator=(vector const &v) {
     view_= gsl_vector_view_array(d_, S);
-    gsl_vector_memcpy(&view_.vector, &v.view_.vector);
+    memcpy(v);
   }
 };
 
@@ -513,7 +499,7 @@ public:
   template<int S, typename V>
   vector(vector<S, V> const &src): alloc_type_(alloc_type::ALLOC) {
     pv_= allocate(src.pv()->size);
-    gsl_vector_memcpy(pv_, src.pv());
+    memcpy(src);
   }
 
   /// Move on construction.
@@ -534,7 +520,7 @@ public:
   template<int S, typename V> vector &operator=(vector<S, V> const &src) {
     alloc_type_= alloc_type::ALLOC;
     pv_= allocate(src.pv()->size);
-    gsl_vector_memcpy(pv_, src.pv());
+    memcpy(src);
     return *this;
   }
 
@@ -579,6 +565,30 @@ template<typename V> class vector<VIEW, V>: public vect_itfc<vector<VIEW, V>> {
   /// Constructor called by const_subvector() and const_view_array().
   vector(gsl_vector_const_view const &v): view_(v) {}
 
+  /// Construct view from pointer, stride, commanded size of view, and maximum
+  /// number of bytes across underlying buffer.
+  /// - When num == 0, cause number of elements in view to be max/str;
+  ///   otherwise, use num.
+  /// @param dat  Pointer to first element.
+  /// @param str  Stride across underlying buffer.
+  /// @param num  Commanded number of elements in view.
+  /// @param max  Number of elements in underlying buffer.
+  static V view(double *dat, size_t str, size_t num, size_t max) {
+    return gsl_vector_view_array_with_stride(dat, str, num ? num : max / str);
+  }
+
+  /// Construct view from pointer to immutable data, stride, commanded size of
+  /// view, and maximum number of bytes across underlying buffer.
+  /// - When num == 0, cause number of elements in view to be max/str;
+  ///   otherwise, use num.
+  /// @param d  Pointer to first element.
+  /// @param s  Stride across underlying buffer.
+  /// @param n  Commanded number of elements in view.
+  /// @param m  Number of elements in underlying buffer.
+  static V const_view(double const *d, size_t s, size_t n, size_t m) {
+    return gsl_vector_const_view_array_with_stride(d, s, n ? n : m / s);
+  }
+
 public:
   /// Initialize view of C-array with specified size and stride.
   /// @param d  Pointer to first element of vector and of array.
@@ -595,7 +605,7 @@ public:
   /// @param str  Stride of vector relative to array.
   template<unsigned N>
   vector(double (&d)[N], size_t n= 0, size_t str= 1):
-      view_(gsl_vector_view_array_with_stride(d, str, n ? n : N / str)) {}
+      view_(view(d, str, n, N)) {}
 
   /// Initialize view of other vector with stride.
   /// @tparam S  Size-parameter identifying type of other vector.
@@ -605,8 +615,7 @@ public:
   /// @param str  Stride relative to other vector.
   template<int S>
   vector(vector<S, V> &v, size_t n= 0, size_t str= 1):
-      view_(gsl_vector_view_array_with_stride(
-          v.pv()->data, str, n ? n : v.size() / str)) {}
+      view_(view(v.pv()->data, str, n, v.size())) {}
 
   /// Initialize view of C-array with specified size and stride.
   /// @param d  Pointer to first immutable element of vector and of array.
@@ -623,8 +632,7 @@ public:
   /// @param stride  Stride of vector relative to array.
   template<unsigned N>
   vector(double const (&d)[N], size_t n= 0, size_t stride= 1):
-      view_(gsl_vector_const_view_array_with_stride(
-          d, stride, n ? n : N / stride)) {}
+      view_(const_view(d, stride, n, N)) {}
 
   /// Initialize view of other vector.
   /// @tparam S  Size-parameter identifying type of other vector.
@@ -634,8 +642,7 @@ public:
   /// @param stride  Stride relative to other vector.
   template<int S>
   vector(vector<S> const &v, size_t n= 0, size_t stride= 1):
-      view_(gsl_vector_const_view_array_with_stride(
-          v.pv()->data, stride, n ? n : v.size() / stride)) {}
+      view_(const_view(v.pv()->data, stride, n, v.size())) {}
 };
 
 
