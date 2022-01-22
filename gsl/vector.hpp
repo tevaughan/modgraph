@@ -29,7 +29,7 @@ namespace gsl {
 template<int S, typename V= gsl_vector_view>
 class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
-  using vec_base::arr_view;
+  using vec_base::subarray;
 
   double d_[S]; ///< Storage for data.
   V view_; ///< GSL's view of data within instance of vector.
@@ -48,7 +48,7 @@ public:
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param d  Data to copy for initialization.
-  vector(double const (&d)[S]): vector() { memcpy(*this, arr_view(d)); }
+  vector(double const (&d)[S]): vector() { memcpy(*this, subarray(d)); }
 
   /// Initialize GSL's view, and initialize vector by deep copy.
   /// @param v  Data to copy for initialization.
@@ -165,6 +165,8 @@ public:
 template<typename V> class vector<VIEW, V>: public vec_iface<vector<VIEW, V>> {
   V view_; ///< GSL's view of data outside instance.
 
+  enum { IS_CONST_VEC= is_same_v<V, gsl_vector_const_view> };
+
 public:
   /// Function needed by vec_iface.
   /// @return  Pointer to GSL's interface to vector.
@@ -178,45 +180,67 @@ public:
   /// @param v  View to copy.
   vector(gsl_vector_view v): view_(v) {}
 
-  /// Constructor called by const_subvector() and const_view_array().
+  /// Constructor called by subvector() and view_array().
   vector(gsl_vector_const_view v): view_(v) {}
 
-  /// Initialize view of C-array.
+  /// Initialize view of standard (decayed) C-array.
+  /// - Arguments are reordered relative to those given to
+  ///   gsl_vector_view_array_with_stride().
+  /// - Putting stride at *end* allows it to have default value of 1.
   /// @tparam T  Type of each element.
-  /// @param d  Pointer to first element of view and of array.
-  /// @param n  Number of elements in vector.
-  /// @param s  Stride of vector relative to array.
+  /// @param b  Pointer to first element of array and of view.
+  /// @param n  Number of elements in view.
+  /// @param s  Stride of view relative to array.
   template<typename T>
-  vector(T *d, size_t n, size_t s= 1): view_(ptr_view(d, n, s).view_) {}
+  vector(T *b, size_t n, size_t s= 1): view_(view_array(b, n, s).view_) {}
 
   /// Initialize view of non-decayed C-array.
+  /// - Arguments are reordered from those given to
+  ///   gsl_vector_subvector_with_stride().
+  /// - Putting initial offset and stride at end allows every argument to have
+  ///   good default (N for number of elements in view, 0 for initial offset,
+  ///   and 1 for stride).
   /// @tparam T  Type of each element.
   /// @tparam N  Number of elements in array.
-  /// @param d  Pointer to first element of view and of array.
-  /// @param n  Number of elements in view; 0 means `N/s`.
-  /// @param s  Stride of vector relative to array.
+  /// @param b  Reference to non-decayed C-array.
+  /// @param n  Number of elements in view.
+  /// @param i  Offset in array of first element in view.
+  /// @param s  Stride of view relative to array.
   template<typename T, int N>
-  vector(T (&d)[N], size_t n= 0, size_t s= 1):
-      view_(arr_view(d, n, s).view_) {}
+  vector(T (&b)[N], size_t n= N, size_t i= 0, size_t s= 1):
+      view_(subarray(b, n, i, s).view_) {}
 
-  /// Initialize view of vector.
-  /// @tparam S  Size (or size-code) of vector.
-  /// @tparam T  Raw type of view.
-  /// @param v  Reference to vector.
-  /// @param n  Number of elements in view; 0 means `v.size()/s`.
-  /// @param s  Stride relative to vector.
+  /// View of subvector of vector.
+  /// - Arguments are reordered from those given to
+  ///   gsl_vector_subvector_with_stride().
+  /// - Putting initial offset and stride at end allows each to have good
+  ///   default:
+  ///   - 0 for number of elements in view as code for v.size(),
+  ///   - 0 for initial offset, and
+  ///   - 1 for stride).
+  /// @param n  Number of elements in view.
+  /// @param i  Offset in vector of first element in view.
+  /// @param s  Stride of view relative to vector.
   template<int S, typename T, typename= enable_if_t<is_same_v<V, T>>>
-  vector(vec_iface<vector<S, T>> &v, size_t n= 0, size_t s= 1):
-      view_(v.subvector(0, n ? n : v.size() / s, s).view_) {}
+  vector(vector<S, T> &v, size_t n= 0, size_t i= 0, size_t s= 1):
+      view_(v.subvector(n ? n : v.size(), i, s).view_) {}
 
-  /// Initialize view of vector.
-  /// @tparam T  Type of vector.
-  /// @param v  Reference to vector.
-  /// @param n  Number of elements in view; 0 means `v.size()/s`.
-  /// @param s  Stride relative to vector.
-  template<typename T>
-  vector(vec_iface<T> const &v, size_t n= 0, size_t s= 1):
-      view_(v.subvector(0, n ? n : v.size() / s, s).view_) {}
+  /// View of subvector of vector.
+  /// - Arguments are reordered from those given to
+  ///   gsl_vector_subvector_with_stride().
+  /// - Putting initial offset and stride at end allows each to have good
+  ///   default:
+  ///   - 0 for number of elements in view as code for v.size(),
+  ///   - 0 for initial offset, and
+  ///   - 1 for stride).
+  /// @param n  Number of elements in view.
+  /// @param i  Offset in vector of first element in view.
+  /// @param s  Stride of view relative to vector.
+  template<int S,
+      typename T,
+      typename= enable_if_t<!is_const_v<decltype(T::vector)> && IS_CONST_VEC>>
+  vector(vector<S, T> const &v, size_t n= 0, size_t i= 0, size_t s= 1):
+      view_(v.subvector(n ? n : v.size(), i, s).view_) {}
 };
 
 

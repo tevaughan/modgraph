@@ -14,22 +14,21 @@ using std::is_const_v;
 
 
 template<typename T>
-vec_base::view<T> vec_base::view_array(T *base, size_t n, size_t stride) {
+vec_base::view<T> vec_base::view_array(T *b, size_t n, size_t s) {
   if constexpr(is_const_v<T>) {
-    return gsl_vector_const_view_array_with_stride(base, stride, n);
+    return gsl_vector_const_view_array_with_stride(b, s, n);
   } else {
-    return gsl_vector_view_array_with_stride(base, stride, n);
+    return gsl_vector_view_array_with_stride(b, s, n);
   }
 }
 
 
 template<typename T, int N>
-vec_base::view<T> vec_base::arr_view(T (&b)[N], size_t n, size_t s) {
-  size_t const num= (n ? n : N / s);
+vec_base::view<T> vec_base::subarray(T (&b)[N], size_t n, size_t i, size_t s) {
   if constexpr(is_const_v<T>) {
-    return gsl_vector_const_view_array_with_stride(b, s, num);
+    return gsl_vector_const_view_array_with_stride(b + i, s, n);
   } else {
-    return gsl_vector_view_array_with_stride(b, s, num);
+    return gsl_vector_view_array_with_stride(b + i, s, n);
   }
 }
 

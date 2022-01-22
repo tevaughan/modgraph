@@ -39,14 +39,16 @@ TEST_CASE("gsl::vector works properly.", "[vector]") {
   vectord v2(10);
   set_get(v2);
 
-  vectorv v3= v2.subvector(1, 4, 2);
+  vectorv v3= v2.subvector(4, 1, 2);
+  REQUIRE(v3.size() == 4);
   REQUIRE(v3[0] == 2.46 + 1);
   REQUIRE(v3[1] == 2.46 + 3);
   REQUIRE(v3[2] == 2.46 + 5);
   REQUIRE(v3[3] == 2.46 + 7);
   set_get(v3);
 
-  vectorcv v4= v3;
+  vectorcv v4= v3.subvector(v3.size());
+  REQUIRE(v4.size() == v3.size());
   REQUIRE(v4[0] == 2.46 + 0);
   REQUIRE(v4[1] == 2.46 + 1);
   REQUIRE(v4[2] == 2.46 + 2);
