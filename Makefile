@@ -8,7 +8,7 @@ LDLIBS := -lgsl
 # 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
 SRCS := $(shell ls *.cpp)
 
-.PHONY : all clean
+.PHONY : all build clean
 
 %.asy : modgraph
 	./modgraph `echo $@ | sed 's/.asy//'`
@@ -21,6 +21,12 @@ include dynamic-targets.mk
 endif
 
 modgraph : $(SRCS:.cpp=.o)
+
+build:
+	@rm -fr build
+	@mkdir build
+	@(cd build; CXX=clang++ cmake ..)
+
 
 clean :
 	@rm -fv [0-9]*.asy

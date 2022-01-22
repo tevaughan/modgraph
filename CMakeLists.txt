@@ -1,18 +1,27 @@
 
+# See http://www.stablecoder.ca/2018/10/30/full-cmake-helper-suite.html
+
 cmake_minimum_required(VERSION 3.16) # Version that comes with Ubuntu 20.04.
 project(square-mod-graph)
 
-# See http://www.stablecoder.ca/2018/10/30/full-cmake-helper-suite.html
+include(CodeCoverage.cmake)
 
-set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -g")
 
-include(CodeCoverage.cmake)
-APPEND_COVERAGE_COMPILER_FLAGS()
+set(CMAKE_CXX_COMPILER_DEBUG "clang++")
+set(CMAKE_CXX_STANDARD_DEBUG 20)
+set(CMAKE_CXX_STANDARD_REQUIRED_DEBUG ON)
+set(CMAKE_CXX_EXTENSIONS_DEBUG OFF)
+
+set(CMAKE_CXX_COMPILER_COVERAGE "clang++")
+set(CMAKE_CXX_STANDARD_COVERAGE 20)
+set(CMAKE_CXX_STANDARD_REQUIRED_COVERAGE ON)
+set(CMAKE_CXX_EXTENSIONS_COVERAGE OFF)
+
+set(CMAKE_BUILD_TYPE Coverage)
 
 # clang-tidy
 find_program (CLANG_TIDY_EXE NAMES "clang-tidy")
