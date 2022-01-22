@@ -26,7 +26,7 @@ template<int S> void set_get(vector<S> &v) {
 TEST_CASE("gsl::vector works properly.", "[vector]") {
   double a[]= {1.1, 1.2, 1.4, 1.8};
 
-  vector v0(a);
+  vector v0(a); // Template-value parameter (number of elements) deduced!
   REQUIRE(v0.size() == 4);
   REQUIRE(v0[0] == 1.1);
   REQUIRE(v0[1] == 1.2);

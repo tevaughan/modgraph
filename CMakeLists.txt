@@ -5,9 +5,14 @@ project(square-mod-graph)
 # See http://www.stablecoder.ca/2018/10/30/full-cmake-helper-suite.html
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_COMPILER "clang++-12")
+set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -g")
+
+include(CodeCoverage.cmake)
+APPEND_COVERAGE_COMPILER_FLAGS()
 
 # clang-tidy
 find_program (CLANG_TIDY_EXE NAMES "clang-tidy")
@@ -19,7 +24,6 @@ else()
   set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE) # clear it
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -g")
-
 add_subdirectory(gsl)
+
 
