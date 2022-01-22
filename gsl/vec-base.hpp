@@ -15,13 +15,14 @@ template<typename D> struct vec_iface; // Forward-declaration.
 /// Base-class name-space for static functions.
 /// - An instance of vec_base does not have any fields.
 /// - Also, vec_base has no function to access field of descendant.
-/// - But there are some static functions that can be collected here.
-/// - Static Function belongs here if arguments do not distinguish it from
-///   similar function for matrix (in case GSL's matrix-capability ever be
-///   added to library).
+/// - Yet some static functions can be collected here.
+/// - Static function belongs in `vec_base` if function's arguments do not
+///   distinguish it from similar function for matrix.
+/// - This allows GSL's matrix-capability cleanly to be added to library if
+///   desired.
 /// - Static function whose name is generic but whose arguments involve
-///   vector-types can reside at root of namespace gsl and need not reside
-///   under vec_base.
+///   vector-types can reside at root of namespace gsl and need not reside in
+///   vec_base.
 struct vec_base {
   /// Specification of view in terms of element-type.
   /// @tparam T  Each element's type, either `double` or `double const`.

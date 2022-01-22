@@ -25,7 +25,7 @@ namespace gsl {
 /// - `S` indicates number of elements in instance of generic template.
 /// - However, each specialization has non-positive `S`; see gsl::size_code.
 /// @tparam S  Number of elements or code for allocation and ownership.
-/// @tparam V  Type of view; ignored when `S == DYNAMIC`.
+/// @tparam V  Type of view; ignored when `S == DCON`.
 template<int S, typename V= gsl_vector_view>
 class vector: public vec_iface<vector<S, V>> {
   static_assert(S > 0);
@@ -63,8 +63,8 @@ public:
 };
 
 
-/// Specialization for vector with dynamic allocation on construction.
-template<> class vector<DYNAMIC>: public vec_iface<vector<DYNAMIC>> {
+/// Specialization for vector as dynamic container on construction.
+template<> class vector<DCON>: public vec_iface<vector<DCON>> {
 public:
   /// Identifier for each of two possible allocation-methods.
   enum class alloc_type {
@@ -123,7 +123,7 @@ public:
 
   /// Move on construction.
   /// - Note that this is not a templated constructor because moving works only
-  ///   from other vector<DYNAMIC>.
+  ///   from other vector<DCON>.
   /// @param src  Vector to move.
   vector(vector &&src): alloc_type_(src.alloc_type_), pv_(src.pv_) {
     src.alloc_type_= alloc_type::ALLOC;
@@ -147,7 +147,7 @@ public:
   /// - This instance's original descriptor and data should be deallocated
   ///   after move, when src's destructor is called.
   /// - Note that this is not a templated function because moving works only
-  ///   from other vector<DYNAMIC>.
+  ///   from other vector<DCON>.
   /// @param src  Vector to exchange state with.
   /// @return  Reference to instance after modification.
   vector &operator=(vector &&src) {
@@ -221,7 +221,7 @@ public:
 
 
 /// Short-hand for vector with ownership of dynamically allocated storage.
-using vectord= vector<DYNAMIC>;
+using vectord= vector<DCON>;
 
 /// Short-hand for vector without ownership of mutable storage.
 using vectorv= vec_base::view<double>;
