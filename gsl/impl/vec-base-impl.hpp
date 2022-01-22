@@ -34,26 +34,6 @@ vec_base::view<T> vec_base::arr_view(T (&b)[N], size_t n, size_t s) {
 }
 
 
-template<typename T> auto make_view(vec_iface<T> &b, size_t n, size_t s) {
-  size_t const num= (n ? n : b.size() / s);
-  if constexpr(is_const_v<decltype(*b.data())>) {
-    auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
-    return vectorcv(v);
-  } else {
-    auto v= gsl_vector_view_array_with_stride(b.data(), s, num);
-    return vectorv(v);
-  }
-}
-
-
-template<typename T>
-auto make_view(vec_iface<T> const &b, size_t n, size_t s) {
-  size_t const num= (n ? n : b.size() / s);
-  auto v= gsl_vector_const_view_array_with_stride(b.data(), s, num);
-  return vectorcv(v);
-}
-
-
 template<typename T, typename U>
 int axpby(double alpha, vec_iface<T> const &x, double beta, vec_iface<U> &y) {
   return gsl_vector_axpby(alpha, x.p(), beta, y.p());

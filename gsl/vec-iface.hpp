@@ -6,8 +6,14 @@
 
 #include "vec-base.hpp"
 #include "vec-iterator.hpp"
+#include <type_traits> // enable_if_t, is_const_v
 
 namespace gsl {
+
+
+using std::enable_if_t;
+using std::is_const_v;
+using std::is_same_v;
 
 
 /// Interface for every kind of vector.

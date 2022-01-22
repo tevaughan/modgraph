@@ -44,7 +44,7 @@ template<> struct view_aux<double const> {
   using raw_vector_type= gsl_vector_const_view;
 
   /// Vector-view associated with element-type `double const`.
-  using vector_type= vector<VIEW, raw_vector_type>;
+  using vector_type= vector<VIEW, raw_vector_type> const;
 };
 
 

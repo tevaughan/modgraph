@@ -13,6 +13,7 @@
 #include <type_traits> // is_same_v, enable_if_t
 
 using std::enable_if_t;
+using std::is_const_v;
 using std::is_same_v;
 
 /// Namespace for C++-interface to small subset of GSL's functionality,
@@ -206,7 +207,7 @@ public:
   /// @param s  Stride relative to vector.
   template<int S, typename T, typename= enable_if_t<is_same_v<V, T>>>
   vector(vec_iface<vector<S, T>> &v, size_t n= 0, size_t s= 1):
-      view_(make_view(v, n, s).view_) {}
+      view_(v.subvector(0, n ? n : v.size() / s, s).view_) {}
 
   /// Initialize view of vector.
   /// @tparam T  Type of vector.
@@ -215,7 +216,7 @@ public:
   /// @param s  Stride relative to vector.
   template<typename T>
   vector(vec_iface<T> const &v, size_t n= 0, size_t s= 1):
-      view_(make_view(v, n, s).view_) {}
+      view_(v.subvector(0, n ? n : v.size() / s, s).view_) {}
 };
 
 

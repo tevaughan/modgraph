@@ -47,27 +47,6 @@ struct vec_base {
 };
 
 
-/// Construct view of vector.
-/// - This returns mutable or immutable view depending on type of element.
-/// @tparam T  Type of vector.
-/// @param b  Reference to vector.
-/// @param n  Number of elements in view; 0 means `b.size()/s`.
-/// @param s  Stride of view relative to vector.
-/// @return  View of vector.
-template<typename T> auto make_view(vec_iface<T> &b, size_t n= 0, size_t s= 1);
-
-
-/// Construct view of vector.
-/// - This returns immutable view, regardless of type of element.
-/// @tparam T  Type of vector.
-/// @param b  Reference to vector.
-/// @param n  Number of elements in view; 0 means `b.size()/s`.
-/// @param s  Stride of view relative to vector.
-/// @return  View of vector.
-template<typename T>
-auto make_view(vec_iface<T> const &b, size_t n= 0, size_t s= 1);
-
-
 /// Linearly combine vector `x` into vector `y` in place.
 /// @tparam X  Type of first source-vector.
 /// @tparam Y  Type of second source-vector and destination-vector.

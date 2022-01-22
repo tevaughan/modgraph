@@ -27,6 +27,7 @@ TEST_CASE("gsl::vector works properly.", "[vector]") {
   double a[]= {1.1, 1.2, 1.4, 1.8};
 
   vector v0(a);
+  REQUIRE(v0.size() == 4);
   REQUIRE(v0[0] == 1.1);
   REQUIRE(v0[1] == 1.2);
   REQUIRE(v0[2] == 1.4);
@@ -46,10 +47,10 @@ TEST_CASE("gsl::vector works properly.", "[vector]") {
   set_get(v3);
 
   vectorcv v4= v3;
-  REQUIRE(v3[0] == 2.46 + 0);
-  REQUIRE(v3[1] == 2.46 + 1);
-  REQUIRE(v3[2] == 2.46 + 2);
-  REQUIRE(v3[3] == 2.46 + 3);
+  REQUIRE(v4[0] == 2.46 + 0);
+  REQUIRE(v4[1] == 2.46 + 1);
+  REQUIRE(v4[2] == 2.46 + 2);
+  REQUIRE(v4[3] == 2.46 + 3);
 }
 
 // EOF

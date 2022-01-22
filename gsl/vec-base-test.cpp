@@ -42,14 +42,14 @@ TEST_CASE("vec_base works properly.", "[vec_base]") {
   REQUIRE(av2.size() == 6);
   check(a, av2);
 
-  auto mv1= make_view(av2, 0, 2);
+  auto mv1= av2.subvector(0, 3, 2);
   REQUIRE(mv1.size() == 3);
   check(a, mv1, 2);
 
   REQUIRE(pv == mv1);
 
   auto const &av3= av2;
-  auto mv2= make_view(av3);
+  auto mv2= av3.subvector(0, 6, 1);
   REQUIRE(mv2.size() == av3.size());
   REQUIRE(mv2 == av3);
 
