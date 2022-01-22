@@ -14,7 +14,7 @@ using std::is_const_v;
 
 
 template<typename T>
-vec_base::view<T> vec_base::ptr_view(T *base, size_t n, size_t stride) {
+vec_base::view<T> vec_base::view_array(T *base, size_t n, size_t stride) {
   if constexpr(is_const_v<T>) {
     return gsl_vector_const_view_array_with_stride(base, stride, n);
   } else {

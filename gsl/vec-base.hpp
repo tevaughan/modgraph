@@ -28,13 +28,15 @@ struct vec_base {
   /// @tparam T  Each element's type, either `double` or `double const`.
   template<typename T> using view= typename view_aux<T>::vector_type;
 
-  /// Construct view of C-array.
+  /// Construct view of standard (decayed) C-array.
+  /// - Arguments are reordered from those given to gsl_vector_view_array().
+  /// - Putting stride at *end* allows it to have default value of 1.
   /// @tparam T  Type of each element.
   /// @param b  Pointer to first element of vector.
   /// @param n  Number of elements in vector.
   /// @param s  Stride of vector relative to array.
   /// @return  View of array.
-  template<typename T> static view<T> ptr_view(T *b, size_t n, size_t s= 1);
+  template<typename T> static view<T> view_array(T *b, size_t n, size_t s= 1);
 
   /// Construct view of non-decayed C-array.
   /// @tparam T  Type of each element.

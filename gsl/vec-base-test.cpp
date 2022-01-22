@@ -28,7 +28,7 @@ TEST_CASE("vec_base works properly.", "[vec_base]") {
   double a[]= {1, 1, 2, 3, 5, 8};
   double const *b= a;
 
-  auto pv= vec_base::ptr_view(b, 3, 2);
+  auto pv= vec_base::view_array(b, 3, 2);
   REQUIRE(pv.size() == 3);
   check(a, pv, 2);
 
@@ -55,7 +55,7 @@ TEST_CASE("vec_base works properly.", "[vec_base]") {
 
   double c[]= {9, 8, 7, 6, 5, 4};
   memcpy(av2, vec_base::arr_view(c));
-  REQUIRE(vec_base::ptr_view(a, 6) == vec_base::ptr_view(c, 6));
+  REQUIRE(vec_base::view_array(a, 6) == vec_base::view_array(c, 6));
 }
 
 
