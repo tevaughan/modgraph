@@ -3,7 +3,9 @@
 An interesting graph is produced by picking a modulus N and then squaring each
 nonnegative integer less than N.  The orbit of a point n under composition of
 the map
+
 <img src="https://latex.codecogs.com/svg.latex?f(n)=n^2\mod{N}"/>
+
 of the square, modulo N, traces zero or more edges of a directed graph until
 either the orbit terminates in a node that maps to itself, or the orbit enters
 a cycle consisting of two or more nodes.
