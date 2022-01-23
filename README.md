@@ -2,9 +2,17 @@
 
 ![33](33.png)
 
-For each positive integer N > 1, a unique set of two or more disjoint, directed
-graphs corresponds to the map of squared integers modulo N. The orbit of a
-point n under composition of the map
+## A Tool for Mathematical Art
+
+The purpose of the `modgraph` project is, for any integer N > 1 that one might
+pick, to produce a three-dimensional graph that is beautiful to behold.  Thus
+the project might qualify as an effort at mathematical art.
+
+## Brief Mathematical Description
+
+For each integer N > 1, a unique set of two or more disjoint, directed graphs
+corresponds to the map of squared integers modulo N. The orbit of a point n
+under composition of the map
 
 <img src="https://latex.codecogs.com/svg.latex?f(n)=n^2\mod{N}"/>
 
@@ -12,15 +20,11 @@ follows the edges of the graph until either
 - the orbit terminates in a node that maps to itself, or
 - the orbit enters a cycle consisting of two or more nodes.
 
-My project allows one to pick a modulus (33 in the graph rendered above) and
-then easily and quickly to see and to interact with a three-dimensional
-rendering of the graphs associated with that modulus.
+The `modgraph` program allows one to pick a modulus (33 in the graph rendered
+above) and then easily and quickly to see and to interact with a
+three-dimensional rendering of the graphs associated with that modulus.
 
 ## Beauty, Symmetry, and Simplicity
-
-The goal of my project is, for any modulus that one might pick, to produce
-something that is beautiful to behold.  Thus the project might qualify as an
-effort at mathematical art.
 
 There seems to be beauty in symmetry.
 
@@ -78,7 +82,7 @@ as the system relaxes into its minimum-energy configuration.
 
 Hence the project here.
 
-## How to Install and To Run
+## How to Install and to Run
 
 In order to use this tool on a unix-like machine:
 - Install [asymptote](https://asymptote.sourceforge.io).
