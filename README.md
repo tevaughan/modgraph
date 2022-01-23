@@ -18,29 +18,34 @@ rendering of the graphs associated with that modulus.
 
 ## Beauty, Symmetry, and Simplicity
 
-The goal of my project is, for each modulus, to produce something that is
-beautiful to behold.  Thus the project might qualify as an effort at
-mathematical art.
+The goal of my project is, for any modulus that one might pick, to produce
+something that is beautiful to behold.  Thus the project might qualify as an
+effort at mathematical art.
 
 There seems to be beauty in symmetry.
 
-One way to search for beauty in the physical world is to look for things that
-are symmetric.  When I was a graduate-student in physics (still enrolled as a
-student but working at a job away from school), I met a physicist, Ilya
-Vitebsky, who pointed out to me that, in nature, any physical system tends to
-show its maximally symmetric arrangement when the system falls into the
-configuration corresponding to its minimum internal energy.  At minimum energy
-in a system made of parts, maximum symmetry is also associated with the idea of
-maximum order among the parts, and there seems to be something beautiful in a
-right ordering of parts. That idea comes into play here, as I describe below.
+Moreover, there seems always to be symmetry, and therefore beauty, in any
+complex thing that is arranged in the simplest possible way.
+
+In the physical world, the idea of simplicity in a complex thing seems to be
+associated with the minimum internal energy of the thing.  One way to search
+for beauty in the physical world is to look for things that are symmetric.
+When I was a graduate-student in physics (still enrolled as a student but
+working at a job away from school), I met a physicist, Ilya Vitebsky, who
+pointed out to me that, in nature, any physical system tends to show its
+maximally symmetric arrangement when the system falls into the configuration
+corresponding to its minimum internal energy.  At minimum energy in a system
+made of parts, maximum symmetry is also associated with the idea of maximum
+order among the parts, and there seems to be something beautiful in a right
+ordering of parts. That idea comes into play here, as I describe below.
 
 A few years earlier, while I was an undergraduate at the University of
 Oklahoma, I had the habit of reading every issue of *Scientific American*.  At
-that time (in the late 1980s), there used to be, in that magazine, a regularly
+the time (in the late 1980s), there used to be, in that magazine, a regularly
 appearing article, always under the same title, "Mathematical Recreations." In
 each installment of Mathematical Recreations, the author illustrated some
 simple but fun mathematical idea.  In one of those articles, the author
-introduced the map of squared integers under a modular arithmetic.
+introduced the map of squared integers under modular arithmetic.
 
 What attracted me to the idea was the beauty in the illustrations accompanying
 the article. Each illustration was a two-dimensional depiction of the graphs
@@ -52,22 +57,22 @@ Over the decades that have elapsed since I was a young man, I have revisited
 the idea of the map of squares under a modulus. At first, as a passtime, I drew
 graphs by hand and tried to see how to elicit maximal symmetry in two
 dimensions on paper.  After a while, I wrote some software to generate the
-subgraphs in an abstract way. This was a great help because the computations
+graphs in an abstract way. This was a great help because the computations
 required to find the graphs for a large modulus are tedious. But I still had to
-draw the graphs iteratively by hand and manually search for the most symmetric
-rendering on paper.
+draw the graphs iteratively by hand and manually to search for the most
+symmetric rendering on paper.
 
-Eventually I realized that to automate this process, I should make a physical
+Eventually I realized that, to automate the process, I should make a physical
 model in which every node repels every other node by a force that varies as the
 inverse of the square of the distance between nodes. Then certain pairs of
-nodes would be attracted by an attractive (spring-) force that varies linearly
-with the distance between nodes. I could then find the minimum-energy
-configuration numerically.
+nodes would be attracted by a spring-force that varies linearly with the
+distance between nodes. Thus I could find the minimum-energy configuration
+numerically!
 
-The problem with this approach is that in two dimensions the nodes are not free
-enough to move. One can find a configuration that *locally* minimizes the energy,
-but, when the modulus grows above 20 or so, it becomes obvious that the
-nonlinear minimizer often fails to find the *global* minimum.  In three
+One problem with this approach is that, in two dimensions, the nodes are not
+sufficiently free to move. One can find a configuration that *locally*
+minimizes the energy, but, when the modulus grows above 20 or so, one sees that
+the nonlinear minimizer often fails to find the *global* minimum. In three
 dimensions, though, there is plenty of room for nodes to slip around each other
 as the system relaxes into its minimum-energy configuration.
 
