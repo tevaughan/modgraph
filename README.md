@@ -11,8 +11,8 @@ the project might qualify as an effort at mathematical art.
 ## Brief Mathematical Description
 
 For each integer N > 1, a unique set of two or more disjoint, directed graphs
-corresponds to the map of squared integers modulo N. The orbit of a point n
-under composition of the map
+corresponds to the map of squared [integers modulo N][mod]. The orbit of a
+point n under composition of the map
 
 <img src="https://latex.codecogs.com/svg.latex?f(n)=n^2\mod{N}"/>
 
@@ -23,6 +23,8 @@ follows the edges of the graph until either
 The `modgraph` program allows one to pick a modulus (33 in the graph rendered
 above) and then easily and quickly to see and to interact with a
 three-dimensional rendering of the graphs associated with that modulus.
+
+[mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
 
 ## Beauty, Symmetry, and Simplicity
 
