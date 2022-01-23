@@ -16,7 +16,7 @@ the set of disjoint graphs associated with that modulus.
 In order to use this tool on a unix-like machine:
 - Install [asymptote](https://asymptote.sourceforge.io).
 - Install a C++-compiler like `clang++` or `g++`.
-- Install `libgsl-dev`.
+- Install [libgsl-dev](https://www.gnu.org/software/gsl).
 - Install GNU `make`.
 - Clone this repository.
 - At the top level, type (for example) `make 33` in order to bring up a
