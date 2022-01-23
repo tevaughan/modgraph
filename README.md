@@ -14,9 +14,10 @@ For each integer N > 1, a unique set of two or more disjoint, [directed
 graphs][graph] corresponds to the map of squared integers modulo N.
 
 For information about what "modulo N" means, see the [article in
-Wikipedia][mod] on modular arithmetic. The idea of the map of *squares* in
-modular arithmetic is something that I first saw in *Scientific American* in
-the 1980s, but I do not have a reference for the article.
+Wikipedia][mod] on modular arithmetic. The word "map" is just another word for
+"function." The idea of the map of *squares* in modular arithmetic is something
+that I first saw in *Scientific American* in the 1980s, but I do not have a
+reference for the article.
 
 The [orbit][orbit] of a point n under [iteration (self-composition)][iteration]
 of the function (the "*map*")
