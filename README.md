@@ -10,8 +10,8 @@ of the square, modulo N, traces zero or more edges of a directed graph until
 either the orbit terminates in a node that maps to itself, or the orbit enters
 a cycle consisting of two or more nodes.
 
-My project allows one to pick a modulus and then to render the small set of
-disjoint graphs associated with that modulus.
+My project allows one to pick a modulus and then to render the set of disjoint
+graphs associated with that modulus.
 
 In order to use this tool on a unix-like machine:
 - Install `asymptote`.
@@ -19,10 +19,12 @@ In order to use this tool on a unix-like machine:
 - Install `libgsl-dev`.
 - Install GNU `make`.
 - Clone this repository.
-- At the top level, type (for example) `make 17` in order to bring up a
-  rendering of the graphs for the modulus, 17.
+- At the top level, type (for example) `make 33` in order to bring up a
+  rendering of the graphs for the modulus, 33.
 - The renderer is `asy` (part of `asymptote`), which allows one to spin the
   three-dimensionally rendered scene around or to zoom in or out.
+
+Here is a rendering of the graphs for 33:
 
 ![33](33.png)
 
