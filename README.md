@@ -28,14 +28,39 @@ follows the edges of the graph until either
 - the orbit terminates in a node that maps to itself, or
 - the orbit enters a cycle consisting of two or more nodes.
 
-The `modgraph` program allows one to pick a modulus (33 in the graph rendered
-above) and then easily and quickly to see and to interact with a
-three-dimensional rendering of the graphs associated with that modulus.
+For example, consider N = 8.  The [nodes (or vertices)][node] that make up the
+graphs are just the numbers (0, 1, 2, 3, 4, 5, 6, and 7) that are used in
+modular arithmetic when the modulus is 8.  To see how they are connected, we
+square each one and see what the result is under the rules of modular
+arithmetic.  That is, we square each number and see what the remainder of the
+square is after dividing by the modulus.
+
+Each of 0 and 1 is has a simple result: Each maps to itself.  But what about
+the others?
+
+2 maps to 4, which maps to 0.
+
+3 maps to 1.
+
+5 maps to 1.
+
+6 maps to 4.
+
+7 maps to 1.
+
+So the result looks something like this:
+
+![8](8.png)
+
+The `modgraph` program allows one to pick a modulus and then easily and quickly
+to see and to interact with a three-dimensional rendering of the graphs
+associated with that modulus.
 
 [graph]: https://en.wikipedia.org/wiki/Directed_graph
 [mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
 [orbit]: https://en.wikipedia.org/wiki/Orbit_(dynamics)#Discrete_time_dynamical_system
 [iteration]: https://en.wikipedia.org/wiki/Iterated_function
+[node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
 
 ## Beauty, Symmetry, and Simplicity
 
