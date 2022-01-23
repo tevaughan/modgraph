@@ -48,7 +48,7 @@ the others?
 
 7 maps to 1.
 
-So the result looks something like this:
+So the result might be rendered as something like this:
 
 ![8](8.png)
 
