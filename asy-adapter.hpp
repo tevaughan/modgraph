@@ -118,6 +118,7 @@ struct header: public asy_adapter {
       double unit_cm= 1.0) {
     oss_ << "settings.outformat = " << '"' << ofmt << '"' << ";\n"
          << "settings.prc = " << prc << ";\n"
+         << "settings.render = 8;\n"
          << "unitsize(" << unit_cm << "cm);\n"
          << "import three;\n";
   }
