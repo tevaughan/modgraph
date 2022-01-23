@@ -54,6 +54,8 @@ So the result might be rendered as something like this:
 
 ### Next, consider N = 29.
 
+In this one, there are 29 different nodes:
+
 ![29][29.png]
 
 ## Brief Mathematical Description
