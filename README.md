@@ -4,23 +4,64 @@
 
 ## A Tool for Mathematical Art
 
-The purpose of the `modgraph` project is, for any integer N > 1 that one might
-pick, to produce a three-dimensional graph that is beautiful to behold.  Thus
-the project might qualify as an effort at mathematical art.
+For any integer N > 1, the `modgraph` program produces a corresponding
+three-dimensional scene.  The scene for any choice of N is a representation of
+the abstract mathematical graphs produced by squaring integers under [modular
+arithmetic][mod], with N as the *modulus*.  For each N, there are at least two
+graphs.
+
+I have long seen some beauty in such graphs, and `modgraph` is an attempt at
+mathematical art.
+
+[mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
+
+## Example
+
+For example, consider N = 8.  Each [node][node] in each [graph][graph] is just
+one of the numbers, 0, 1, 2, 3, 4, 5, 6, and 7, that are used in modular
+arithmetic when the modulus is 8.  For modulus N, the allowable numbers are 0,
+1, 2, ..., N - 1.
+
+To see how the nodes are connected, one squares each node's value and sees what
+the result is under the rules of modular arithmetic: One squares each number
+and sees what the remainder is after dividing by the modulus.
+
+Each of 0 and 1 is has a simple result: Each squares to itself.
+
+But what about the others?
+
+2 squares to 4.
+
+4 squares to 16, but the biggest allowable number is 7 when the modulus is 8.
+If the modulus be 8, then 16 is the same as the remainder of 16/8. The
+remainder of the division is 0, and so 4 squares to 0.
+
+3 squares to 1.
+
+5 squares to 1.
+
+6 squares to 4.
+
+7 squares to 1.
+
+So the result might be rendered as something like this:
+
+![8](8.png)
+
+[node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
+[graph]: https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)
 
 ## Brief Mathematical Description
 
 For each integer N > 1, a unique set of two or more disjoint, [directed
-graphs][graph] corresponds to the map of squared integers modulo N.
+graphs][digraph] corresponds to the map of squared integers modulo N.
 
-For information about what "modulo N" means, see the [article in
-Wikipedia][mod] on modular arithmetic. The word "map" is just another word for
-"function." The idea of the map of *squares* in modular arithmetic is something
-that I first saw in *Scientific American* in the 1980s, but I do not have a
-reference for the article.
+The word "map" is just another word for "function." The idea of the map of
+*squares* in modular arithmetic is something that I first saw in *Scientific
+American* in the 1980s, but I do not have a reference for the article.
 
-The [orbit][orbit] of a point n under [iteration (self-composition)][iteration]
-of the function (the "*map*")
+The [orbit][orbit] of a node n under [iteration][iteration] of the function
+(the map)
 
 <img src="https://latex.codecogs.com/svg.latex?f(n)=n^2\mod{N}"/>
 
@@ -28,72 +69,61 @@ follows the edges of the graph until either
 - the orbit terminates in a node that maps to itself, or
 - the orbit enters a cycle consisting of two or more nodes.
 
-For example, consider N = 8.  The [nodes (or vertices)][node] that make up the
-graphs are just the numbers (0, 1, 2, 3, 4, 5, 6, and 7) that are used in
-modular arithmetic when the modulus is 8.  To see how they are connected, we
-square each one and see what the result is under the rules of modular
-arithmetic.  That is, we square each number and see what the remainder of the
-square is after dividing by the modulus.
-
-Each of 0 and 1 is has a simple result: Each maps to itself.  But what about
-the others?
-
-2 maps to 4, which maps to 0.
-
-3 maps to 1.
-
-5 maps to 1.
-
-6 maps to 4.
-
-7 maps to 1.
-
-So the result might be rendered as something like this:
-
-![8](8.png)
-
 The `modgraph` program allows one to pick a modulus and then easily and quickly
 to see and to interact with a three-dimensional rendering of the graphs
 associated with that modulus.
 
-[graph]: https://en.wikipedia.org/wiki/Directed_graph
-[mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
+[digraph]: https://en.wikipedia.org/wiki/Directed_graph
 [orbit]: https://en.wikipedia.org/wiki/Orbit_(dynamics)#Discrete_time_dynamical_system
 [iteration]: https://en.wikipedia.org/wiki/Iterated_function
-[node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
 
 ## Beauty, Symmetry, and Simplicity
 
 There seems to be beauty in symmetry.
 
-Moreover, there seems always to be symmetry, and therefore beauty, in any
-complex thing that is arranged in the simplest possible way.
+Also, there seems always to be symmetry--and therefore beauty--in any complex
+thing that is arranged in the simplest possible way.
 
 In the physical world, the idea of simplicity in a complex thing seems to be
 associated with the minimum internal energy of the thing.  One way to search
-for beauty in the physical world is to look for things that are symmetric.
-When I was a graduate-student in physics (still enrolled as a student but
-working at a job away from school), I met a physicist, Ilya Vitebsky, who
-pointed out to me that, in nature, any physical system tends to show its
-maximally symmetric arrangement when the system falls into the configuration
-corresponding to its minimum internal energy.  At minimum energy in a system
-made of parts, maximum symmetry is also associated with the idea of maximum
-order among the parts, and there seems to be something beautiful in a right
-ordering of parts. That idea comes into play here, as I describe below.
+for beauty in the physical world is to look for things that are symmetric. When
+I was a graduate-student in physics (still enrolled as a student but working at
+a job away from school), I met a physicist, Ilya Vitebsky, who pointed out to
+me that, in nature, any physical system tends to show its maximally symmetric
+arrangement when the system falls into the configuration corresponding to its
+minimum internal energy.  At minimum energy in a system made of parts, maximum
+symmetry is also associated with the idea of maximum order among the parts, and
+there seems to be something beautiful in a right ordering of parts.
 
-A few years earlier, while I was an undergraduate at the University of
-Oklahoma, I had the habit of reading every issue of *Scientific American*.  At
-the time (in the late 1980s), there used to be, in that magazine, a regularly
-appearing article, always under the same title, "Mathematical Recreations." In
-each installment of Mathematical Recreations, the author illustrated some
-simple but fun mathematical idea.  In one of those articles, the author
-introduced the map of squared integers under modular arithmetic.
+For example, consider liquid water, which is understood as a collection of
+water-molecules. When liquid water cools, the standard physical model of the
+water holds that the water loses energy.  Eventually, the loss of energy from
+the water allows the molecules to form a highly ordered state, a crystal of
+ice. A crystal of ice seems beautiful both in its ordinary appearance and in
+its theoretical description, as the symmetric, minimum-energy state for a
+collection of water-molecules.
+
+The idea, that there is beauty, symmetry, and order in a minimum-energy state,
+comes into play in `modgraph`, as I describe below.
+
+## My First Encounter With Modular Arithmetic
+
+A few years before I met Vitebsky, I was an undergraduate at the University of
+Oklahoma.  While there I had the habit of reading every issue of *Scientific
+American*.  At the time (in the late 1980s), there used to be, in that
+magazine, a regularly appearing article, always under the same title,
+"Mathematical Recreations." In each installment of Mathematical Recreations,
+the author illustrated some simple but fun mathematical idea.  In one of those
+articles, the author introduced the map of squared integers under modular
+arithmetic.
 
 What attracted me to the idea was the beauty in the illustrations accompanying
 the article. Each illustration was a two-dimensional depiction of the graphs
 associated with a different modulus.  Most likely, each illustration was drawn
 by an artist who arranged the nodes and edges in the most symmetric, most
 pleasing way that occurred to him.
+
+## From Doodles to Computer-Programs
 
 Over the decades that have elapsed since I was a young man, I have revisited
 the idea of the map of squares under a modulus. At first, as a passtime, I drew
