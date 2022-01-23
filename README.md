@@ -22,8 +22,9 @@ In order to use this tool on a unix-like machine:
 - Clone this repository.
 - At the top level, type (for example) `make 33` in order to bring up a
   rendering of the graphs for the modulus, 33.
-- The renderer is `asy` (part of `asymptote`), which allows one to spin the
-  three-dimensionally rendered scene around or to zoom in or out.
+- The renderer is `asy` (part of `asymptote`), which allows one interactively
+  with the mouse to spin the three-dimensionally rendered scene around and to
+  zoom in or out.
 
 Here is a rendering of the graphs for 33:
 
