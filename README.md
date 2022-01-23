@@ -1,4 +1,4 @@
-# Beauty in Simple Math
+# Beauty in Easy Math
 
 ![33](33.png)
 
@@ -10,9 +10,16 @@ the project might qualify as an effort at mathematical art.
 
 ## Brief Mathematical Description
 
-For each integer N > 1, a unique set of two or more disjoint, directed graphs
-corresponds to the map of squared [integers modulo N][mod]. The orbit of a
-point n under composition of the map
+For each integer N > 1, a unique set of two or more disjoint, [directed
+graphs][graph] corresponds to the map of squared integers modulo N.
+
+For information about what "modulo N" means, see the [article in
+Wikipedia][mod] on modular arithmetic. The idea of the map of *squares* in
+modular arithmetic is something that I first saw in *Scientific American* in
+the 1980s, but I do not have a reference for the article.
+
+The [orbit][orbit] of a point n under [iteration (self-composition)][iteration]
+of the function (the "*map*")
 
 <img src="https://latex.codecogs.com/svg.latex?f(n)=n^2\mod{N}"/>
 
@@ -24,7 +31,10 @@ The `modgraph` program allows one to pick a modulus (33 in the graph rendered
 above) and then easily and quickly to see and to interact with a
 three-dimensional rendering of the graphs associated with that modulus.
 
+[graph]: https://en.wikipedia.org/wiki/Directed_graph
 [mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
+[orbit]: https://en.wikipedia.org/wiki/Orbit_(dynamics)#Discrete_time_dynamical_system
+[iteration]: https://en.wikipedia.org/wiki/Iterated_function
 
 ## Beauty, Symmetry, and Simplicity
 
