@@ -56,7 +56,7 @@ So the result might be rendered as something like this:
 
 In this one, there are 29 different nodes:
 
-![29][29.png]
+![29](29.png)
 
 ## Brief Mathematical Description
 
