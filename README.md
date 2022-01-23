@@ -49,7 +49,7 @@ introduced the map of squared integers under modular arithmetic.
 
 What attracted me to the idea was the beauty in the illustrations accompanying
 the article. Each illustration was a two-dimensional depiction of the graphs
-associated with each of a few moduli.  Most likely, each illustration was drawn
+associated with a different modulus.  Most likely, each illustration was drawn
 by an artist who arranged the nodes and edges in the most symmetric, most
 pleasing way that occurred to him.
 
