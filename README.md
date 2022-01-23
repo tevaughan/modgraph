@@ -15,12 +15,13 @@ mathematical art.
 
 [mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
 
-## Example
+## Examples
 
-For example, consider N = 8.  Each [node][node] in each [graph][graph] is just
-one of the numbers, 0, 1, 2, 3, 4, 5, 6, and 7, that are used in modular
-arithmetic when the modulus is 8.  For modulus N, the allowable numbers are 0,
-1, 2, ..., N - 1.
+### First, consider N = 8.
+
+Each [node][node] in each [graph][graph] is just one of the numbers, 0, 1, 2,
+3, 4, 5, 6, and 7, that are used in modular arithmetic when the modulus is 8.
+For modulus N, the allowable numbers are 0, 1, 2, ..., N - 1.
 
 To see how the nodes are connected, one squares each node's value and sees what
 the result is under the rules of modular arithmetic: One squares each number
@@ -50,6 +51,10 @@ So the result might be rendered as something like this:
 
 [node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
 [graph]: https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)
+
+### Next, consider N = 29.
+
+![29][29.png]
 
 ## Brief Mathematical Description
 
