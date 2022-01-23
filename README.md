@@ -1,8 +1,29 @@
 # modgraph
 
-Graph produced by picking a modulus N and tracing each orbit that starts at a
-number i in {0,1,2,...,N} and proceeds by squaring the current number modulo N
-in order to obtain the next number in the orbit.
+An interesting graph is produced by picking a modulus N and then squaring each
+nonnegative integer less than N.  The orbit of a point n under composition of
+the map
+<img src="https://render.githubusercontent.com/render/math?math=f(n) = n^2 \mod
+N">
+of the square, modulo N, traces zero or more edges of a directed graph until
+either the orbit terminates in a node that maps to itself, or the orbit enters
+a cycle consisting of two or more nodes.
+
+My project allows one to pick a modulus and then to render the small set of
+disjoint graphs associated with that modulus.
+
+In order to use this tool on a unix-like machine:
+- Install `asymptote`.
+- Install a C++-compiler like `clang++` or `g++`.
+- Install `libgsl-dev`.
+- Install GNU `make`.
+- Clone this repository.
+- At the top level, type (for example) `make 17` in order to bring up a
+  rendering of the graphs for the modulus, 17.
+- The renderer is `asy` (part of `asymptote`), which allows one to spin the
+  three-dimensionally rendered scene around or to zoom in or out.
+
+![33](33.png)
 
 ## cmake, gsl, etc.
 

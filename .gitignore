@@ -7,5 +7,4 @@ dynamic-targets.mk
 *.eps
 modgraph
 *.o
-*.png
 texput.*

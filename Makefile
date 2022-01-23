@@ -1,5 +1,5 @@
 
-CXX := g++-10
+CXX := g++
 CC := $(CXX)
 CXXFLAGS := -g -Wall -W -std=c++17 -O2
 LDLIBS := -lgsl
@@ -31,12 +31,8 @@ build:
 clean :
 	@rm -fv [0-9]*.asy
 	@rm -fv dynamic-targets.mk
-	@rm -fv *.eps
 	@rm -fv modgraph
-	@rm -fv *.neato
 	@rm -fv *.o
-	@rm -fv *.pdf
-	@rm -fv *.png
 	@rm -fv texput.*
 
 # See
