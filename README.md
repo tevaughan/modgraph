@@ -52,11 +52,9 @@ So the result might be rendered as something like this:
 [node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
 [graph]: https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)
 
-### Next, consider N = 29.
+### Next, consider N = 23.
 
-In this one, there are 29 different nodes:
-
-![29](29.png)
+![23](23.png)
 
 ## Brief Mathematical Description
 
