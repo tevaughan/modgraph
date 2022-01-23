@@ -1,4 +1,4 @@
-# Beauty in a Simple Mathematical Idea
+# Beauty in Simple Math
 
 ![33](33.png)
 
