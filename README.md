@@ -14,7 +14,7 @@ My project allows one to pick a modulus and then easily and quickly to render
 the set of disjoint graphs associated with that modulus.
 
 In order to use this tool on a unix-like machine:
-- Install `asymptote`.
+- Install [asymptote](https://asymptote.sourceforge.io).
 - Install a C++-compiler like `clang++` or `g++`.
 - Install `libgsl-dev`.
 - Install GNU `make`.
