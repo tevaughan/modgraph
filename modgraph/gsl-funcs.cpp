@@ -144,7 +144,7 @@ void minimizer::minimize_gradient(Matrix3Xd &positions) {
       }
       break;
     }
-    status= gsl_multimin_test_gradient(s->gradient, 1.0E-04);
+    status= gsl_multimin_test_gradient(s->gradient, 1.0E-05);
     if(status == GSL_SUCCESS) { printf("converged to minimum at\n"); }
     printf("%5d f()=%8.4f\n", iter, s->f);
   } while(status == GSL_CONTINUE && iter < MAX_ITER);

@@ -4,9 +4,9 @@
 
 ## A Tool for Mathematical Art
 
-For any integer N > 1, the `modgraph` program produces a corresponding
-three-dimensional scene.  The scene for any choice of N is a representation of
-the abstract mathematical graphs produced by squaring integers under [modular
+The `modgraph` program produces a different three-dimensional scene for each
+integer N > 1.  The scene for any choice of N is a representation of the
+abstract mathematical graphs produced by squaring integers under [modular
 arithmetic][mod], with N as the *modulus*.  For each N, there are at least two
 graphs.
 
@@ -215,20 +215,25 @@ as the system relaxes into its minimum-energy configuration.
 
 Hence the project here.
 
-## In Progress: Forces of Attraction
+## Forces of Attraction
 
-I am still working on determining what (invisible) springs to install.  At the
-moment, there is an attractive force between any two nodes i and j
+The springs, each attracting a pair of nodes, are invisible in a rendered
+scene.  There is an attractive force between any two nodes i and j
+- if  f(i) = j  (so that there is an arrow from one to the other),
+- if  i be a factor of N,
+- if  j be a factor of N,
+- if  N - i be a factor of N,
+- if  N - j be a factor of N,
 - if  [i + j] mod N  be 0,
 - if  [i + j] mod N  be a factor of N, or
 - if  N - [[i + j] mod N]  be a factor of N.
 
+Note that 1 is *not* considered to be a factor of N, but 0 *is* considered to
+be a factor.  (0 stands for N, which is a factor of itself, in modular
+arithmetic.)
+
 These attractions give almost every graph a high degree of symmetry at minimum
 potential energy.
-
-However, I shall soon experiment with adding a spring between i and j
-- if  |i - j| mod N  be a factor of N or
-- if  N - [|i - j| mod N]  be a factor of N.
 
 ## In Progress: cmake, gsl, etc.
 

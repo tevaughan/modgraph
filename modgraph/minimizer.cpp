@@ -1,7 +1,10 @@
-
 /// @file       minimizer.cpp
 /// @brief      Definition of modgraph::minimizer.
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
+
+#if 0
+#define NM_SIMPLEX
+#endif
 
 #include "minimizer.hpp"
 #include "graph.hpp"
@@ -17,10 +20,11 @@ namespace modgraph {
 
 /// Calculate factors of `m`.
 /// - Include 0, which represents `m` in modular arithmetic.
+/// - Do not include 1 as a factor.
 /// @param m  Positive integer whose factors are calculated.
 /// @return  List of nontrivial factors.
 vector<int> calculate_factors(int m) {
-  vector<int> f({0, 1});
+  vector<int> f({0});
   for(int i= 2; i <= m / 2; ++i) {
     if((m % i) == 0) f.push_back(i);
   }
