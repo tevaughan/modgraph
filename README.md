@@ -27,7 +27,8 @@ In order to use this tool on a unix-like machine:
   example) `make 33` in order to bring up a rendering of the graphs for the
   modulus, 33.
 - Note that the top-level directory of the repository is by default named
-  `modgraph`, and one needs to change into the `modgraph` subdirectory.
+  `modgraph`, and one needs to change into the `modgraph` *subdirectory* of the
+  local copy, which is likely also named `modgraph`!
 ```
 $ git clone https://github.com/tevaughan/modgraph.git
 $ cd modgraph/modgraph
