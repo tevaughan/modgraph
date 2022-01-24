@@ -15,7 +15,30 @@ attempt to automate the exploration of mathematical art.
 
 [mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
 
-## Examples
+## How to Install and to Run
+
+In order to use this tool on a unix-like machine:
+- Install [asymptote](https://asymptote.sourceforge.io).
+- Install [libgsl-dev](https://www.gnu.org/software/gsl).
+- Install [libeigen3-dev](https://eigen.tuxfamily.org).
+- Install a C++-compiler like `clang++` or `g++`.
+- Install GNU `make`.
+- Clone this repository.
+- At the top level, type (for example) `make 33` in order to bring up a
+  rendering of the graphs for the modulus, 33.
+- The viewer is `asy` (part of `asymptote`), which allows one interactively
+  with the mouse to spin the three-dimensionally rendered scene around and to
+  zoom in or out.
+
+## Examples to Illustrate the Idea
+
+The first example gives the idea about what each graph is.  The second gives an
+idea of the structure that one can find.
+
+Note, however, that when `modgraph`'s Makefile launches the viewer, though, one
+can spin the three-dimensional model around in real-time.  Sometimes the
+complexity of the graphs for a large modulus makes it so that the structure
+cannot be fully appreciated by viewing from a single point of view.
 
 ### First, consider N = 8.
 
@@ -182,20 +205,20 @@ as the system relaxes into its minimum-energy configuration.
 
 Hence the project here.
 
-## How to Install and to Run
+## In Progress: Forces of Attraction
 
-In order to use this tool on a unix-like machine:
-- Install [asymptote](https://asymptote.sourceforge.io).
-- Install [libgsl-dev](https://www.gnu.org/software/gsl).
-- Install [libeigen3-dev](https://eigen.tuxfamily.org).
-- Install a C++-compiler like `clang++` or `g++`.
-- Install GNU `make`.
-- Clone this repository.
-- At the top level, type (for example) `make 33` in order to bring up a
-  rendering of the graphs for the modulus, 33.
-- The viewer is `asy` (part of `asymptote`), which allows one interactively
-  with the mouse to spin the three-dimensionally rendered scene around and to
-  zoom in or out.
+I am still working on determining what (invisible) springs to install.  At the
+moment, there is an attractive force between any two nodes i and j
+- if  [i + j] mod N  be 0,
+- if  [i + j] mod N  be a factor of N, or
+- if  N - [[i + j] mod N]  be a factor of N.
+
+These attractions give almost every graph a high degree of symmetry at minimum
+potential energy.
+
+However, I shall soon experiment with adding a spring between i and j
+- if  |i - j| mod N  be a factor of N or
+- if  N - [|i - j| mod N]  be a factor of N.
 
 ## In Progress: cmake, gsl, etc.
 
