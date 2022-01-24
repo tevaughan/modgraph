@@ -45,10 +45,10 @@ $ make 33  # or whatever number one likes!
 The first example gives the idea about what each graph is.  The second gives an
 idea of the structure that one can find.
 
-Note, however, that when `modgraph`'s Makefile launches the viewer, though, one
-can spin the three-dimensional model around in real-time.  Sometimes the
-complexity of the graphs for a large modulus makes it so that the structure
-cannot be fully appreciated by viewing from a single point of view.
+Sometimes the complexity of the graphs for a large modulus makes it so that the
+structure cannot be fully appreciated by viewing from a single point of view.
+Note that when `modgraph`'s Makefile launches the viewer, one can spin the
+three-dimensional model around in real-time.
 
 ### First, consider N = 8.
 
