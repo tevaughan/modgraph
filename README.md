@@ -10,8 +10,8 @@ the abstract mathematical graphs produced by squaring integers under [modular
 arithmetic][mod], with N as the *modulus*.  For each N, there are at least two
 graphs.
 
-I have long seen some beauty in such graphs, and `modgraph` is an attempt at
-mathematical art.
+I have long seen some beauty in such graphs, and `modgraph` represents an
+attempt to automate the exploration of mathematical art.
 
 [mod]: https://en/wikipedia.org/wiki/Modular_arithmetic
 
@@ -27,23 +27,37 @@ To see how the nodes are connected, one squares each node's value and sees what
 the result is under the rules of modular arithmetic: One squares each number
 and sees what the remainder is after dividing by the modulus.
 
-Each of 0 and 1 is has a simple result: Each squares to itself.
+Each of 0 and 1 is has a simple result: The square of each is itself.
+- 0 points back to 0 (to itself).
+- 1 points back to 1 (to itself).
 
 But what about the others?
 
-2 squares to 4.
+The square of 2 is 4.
+- 2 points to 4.
 
-4 squares to 16, but the biggest allowable number is 7 when the modulus is 8.
-If the modulus be 8, then 16 is the same as the remainder of 16/8. The
-remainder of the division is 0, and so 4 squares to 0.
+The square of 3 is ordinarily 9.
+- However, if the modulus be 8, then then biggest allowable number is 7.
+- If the modulus be N, then any m > N is represented by the remainder of m / N.
+- So if the modulus be 8, then 9 is represented by the remainder of 9 / 8.
+- That remainder is 1, and so the square of 3 is 1 when the modulus is 8.
+- 3 points to 1.
 
-3 squares to 1.
+The square of 4 is ordinarily 16.
+- The remainder of 16 / 8 is 0.
+- 4 points to 0.
 
-5 squares to 1.
+The square of 5 is ordinarily 25.
+- The remainder of 25 / 8 is 1.
+- 5 points to 1.
 
-6 squares to 4.
+The square of 6 is ordinarily 36.
+- The remainder of 36 / 8 is 4.
+- 6 points to 4.
 
-7 squares to 1.
+The square of 7 is ordinarily 49.
+- The remainder of 49 / 8 is 1.
+- 7 points to 1.
 
 So the result might be rendered as something like this:
 
@@ -61,9 +75,14 @@ So the result might be rendered as something like this:
 For each integer N > 1, a unique set of two or more disjoint, [directed
 graphs][digraph] corresponds to the map of squared integers modulo N.
 
-The word "map" is just another word for "function." The idea of the map of
-*squares* in modular arithmetic is something that I first saw in *Scientific
-American* in the 1980s, but I do not have a reference for the article.
+The word "map" is just another word for "function."  The phrase "modulo N"
+means something like either "to the modulus N" (if I interpret "modulo" in the
+dative case) or "in the modulus N" (if I interpreset "modulo" in the ablative
+case).
+
+The idea of exploring the map of *squares* in modular arithmetic is something
+that I first saw in *Scientific American* in the 1980s, but I do not have a
+reference for the article.
 
 The [orbit][orbit] of a node n under [iteration][iteration] of the function
 (the map)
@@ -73,6 +92,10 @@ The [orbit][orbit] of a node n under [iteration][iteration] of the function
 follows the edges of the graph until either
 - the orbit terminates in a node that maps to itself, or
 - the orbit enters a cycle consisting of two or more nodes.
+
+The "orbit" of n is just the sequence of numbers consisting of n, the square of
+n, the square of the square of n, the square of the square of the square of n,
+etc.
 
 The `modgraph` program allows one to pick a modulus and then easily and quickly
 to see and to interact with a three-dimensional rendering of the graphs
@@ -91,20 +114,21 @@ thing that is arranged in the simplest possible way.
 
 In the physical world, the idea of simplicity in a complex thing seems to be
 associated with the minimum internal energy of the thing.  One way to search
-for beauty in the physical world is to look for things that are symmetric. When
-I was a graduate-student in physics (still enrolled as a student but working at
-a job away from school), I met a physicist, Ilya Vitebsky, who pointed out to
-me that, in nature, any physical system tends to show its maximally symmetric
-arrangement when the system falls into the configuration corresponding to its
-minimum internal energy.  At minimum energy in a system made of parts, maximum
-symmetry is also associated with the idea of maximum order among the parts, and
-there seems to be something beautiful in a right ordering of parts.
+for beauty in the physical world is to look for things that are symmetric.
+When I was a graduate-student in physics (still enrolled as a student but
+working at a job away from school), I met a physicist, Ilya Vitebsky, who
+pointed out to me that, in nature, any physical system tends to show its
+maximally symmetric arrangement when the system falls into the configuration
+corresponding to its minimum internal energy.  At minimum energy in a system
+made of parts, maximum symmetry is also associated with the idea of maximum
+order among the parts, and there seems to be something beautiful in a right
+ordering of parts.
 
 For example, consider liquid water, which is understood as a collection of
-water-molecules. When liquid water cools, the standard physical model of the
+water-molecules.  When liquid water cools, the standard physical model of the
 water holds that the water loses energy.  Eventually, the loss of energy from
 the water allows the molecules to form a highly ordered state, a crystal of
-ice. A crystal of ice seems beautiful both in its ordinary appearance and in
+ice.  A crystal of ice seems beautiful both in its ordinary appearance and in
 its theoretical description, as the symmetric, minimum-energy state for a
 collection of water-molecules.
 
@@ -116,8 +140,8 @@ comes into play in `modgraph`, as I describe below.
 A few years before I met Vitebsky, I was an undergraduate at the University of
 Oklahoma.  While there I had the habit of reading every issue of *Scientific
 American*.  At the time (in the late 1980s), there used to be, in that
-magazine, a regularly appearing article, always under the same title,
-"Mathematical Recreations." In each installment of Mathematical Recreations,
+magazine, a regularly appearing column of words, always under the same title,
+"Mathematical Recreations."  In each installment of Mathematical Recreations,
 the author illustrated some simple but fun mathematical idea.  In one of those
 articles, the author introduced the map of squared integers under modular
 arithmetic.
@@ -131,20 +155,23 @@ pleasing way that occurred to him.
 ## From Doodles to Computer-Programs
 
 Over the decades that have elapsed since I was a young man, I have revisited
-the idea of the map of squares under a modulus. At first, as a passtime, I drew
-graphs by hand and tried to see how to elicit maximal symmetry in two
+the idea of the map of squares under a modulus.  At first, as a passtime, I
+drew graphs by hand and tried to see how to elicit maximal symmetry in two
 dimensions on paper.  After a while, I wrote some software to generate the
-graphs in an abstract way. This was a great help because the computations
-required to find the graphs for a large modulus are tedious. But I still had to
-draw the graphs iteratively by hand and manually to search for the most
+graphs in an automated way.  This was a great help because the computations
+required to find the graphs for a large modulus are tedious.  Yet I still had
+to draw the graphs iteratively by hand and manually to search for the most
 symmetric rendering on paper.
 
 Eventually I realized that, to automate the process, I should make a physical
 model in which every node repels every other node by a force that varies as the
-inverse of the square of the distance between nodes. Then certain pairs of
-nodes would be attracted by a spring-force that varies linearly with the
-distance between nodes. Thus I could find the minimum-energy configuration
-numerically!
+inverse of the square of the distance between nodes.  In order to keep the
+system from flying apart because of universal repulsion between every node and
+every other node, and in order to establish spatial relationships, each of
+which mirrored a numerical relationship, for each of certain pairs of nodes I
+established an attraction by a spring-force that increases linearly with the
+distance between the nodes in the pair.  After doing this, I could find the
+minimum-energy configuration numerically!
 
 One problem with this approach is that, in two dimensions, the nodes are not
 sufficiently free to move. One can find a configuration that *locally*
