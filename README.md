@@ -23,12 +23,21 @@ In order to use this tool on a unix-like machine:
 - Install [libeigen3-dev](https://eigen.tuxfamily.org).
 - Install a C++-compiler like `clang++` or `g++`.
 - Install GNU `make`.
-- Clone this repository.
-- At the top level, type (for example) `make 33` in order to bring up a
-  rendering of the graphs for the modulus, 33.
-- The viewer is `asy` (part of `asymptote`), which allows one interactively
-  with the mouse to spin the three-dimensionally rendered scene around and to
-  zoom in or out.
+- Clone this repository, change into the `modgraph` subdirectory, and type (for
+  example) `make 33` in order to bring up a rendering of the graphs for the
+  modulus, 33.
+- Note that the top-level directory of the repository is by default named
+  `modgraph`, and one needs to change into the `modgraph` subdirectory.
+```
+$ git clone https://github.com/tevaughan/modgraph.git
+$ cd modgraph/modgraph
+$ make 33  # or whatever number one likes!
+```
+- The viewer `asy` (part of `asymptote`) allows one interactively with the
+  mouse to spin the three-dimensionally rendered scene around and to zoom in or
+  out.
+- `asy` is launched automatically when an integer is given as the goal to the
+  `make` command while in the `modgraph` subdirectory.
 
 ## Examples to Illustrate the Idea
 

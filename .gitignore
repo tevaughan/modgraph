@@ -5,6 +5,5 @@ build
 .deps
 dynamic-targets.mk
 *.eps
-modgraph
 *.o
 texput.*

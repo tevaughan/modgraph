@@ -1,49 +1,16 @@
 
-CXX := g++
-CC := $(CXX)
-CXXFLAGS := -g -Wall -W -std=c++17 -O2
-LDLIBS := -lgsl
+.PHONY : all build clean modgraph
 
-# See
-# 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
-SRCS := $(shell ls *.cpp)
+all : build modgraph
 
-.PHONY : all build clean
-
-%.asy : modgraph
-	./modgraph `echo $@ | sed 's/.asy//'`
-
-all : modgraph
-
-DYNAMIC_TARGETS=$(shell ./dynamic-targets $(MAKECMDGOALS))
-ifeq ($(DYNAMIC_TARGETS),true)
-include dynamic-targets.mk
-endif
-
-modgraph : $(SRCS:.cpp=.o)
+modgraph:
+	(cd modgraph; make)
 
 build:
 	@rm -fr build
 	@mkdir build
 	@(cd build; CXX=clang++ cmake ..)
 
-
 clean :
-	@rm -fv [0-9]*.asy
-	@rm -fv dynamic-targets.mk
-	@rm -fv modgraph
-	@rm -fv *.o
-	@rm -fv texput.*
 	@rm -frv build
-
-# See
-# 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
-DEPDIR := .deps
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
-COMPILE.cxx = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-%.o : %.cpp
-%.o : %.cpp $(DEPDIR)/%.d | $(DEPDIR); $(COMPILE.cxx) $(OUTPUT_OPTION) $<
-$(DEPDIR): ; @mkdir -p $@
-DEPFILES := $(SRCS:%.cpp=$(DEPDIR)/%.d)
-$(DEPFILES):
-include $(wildcard $(DEPFILES))
+	@(cd modgraph; make clean)
