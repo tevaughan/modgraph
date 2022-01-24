@@ -38,6 +38,5 @@ else()
   set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE) # clear it
 endif()
 
-add_subdirectory(gsl)
-
+add_subdirectory(test)
 

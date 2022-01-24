@@ -2,7 +2,7 @@
 /// @copyright  2022 Thomas E. Vaughan, all rights reserved.
 /// @brief      Tests for gsl::vec_base.
 
-#include "vector.hpp"
+#include "gslcpp/vector.hpp"
 #include <catch.hpp>
 
 using gsl::memcpy;
