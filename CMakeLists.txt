@@ -1,10 +1,15 @@
 
 # See http://www.stablecoder.ca/2018/10/30/full-cmake-helper-suite.html
+# See https://cliutils.gitlab.io/modern-cmake/chapters/basics/structure.html
 
 cmake_minimum_required(VERSION 3.16) # Version that comes with Ubuntu 20.04.
 project(square-mod-graph)
 
-include(CodeCoverage.cmake)
+# Append ${PROJECT_SOURCE_DIR}/cmake to CMAKE_MODULE_PATH.
+# Note that PROJECT_SOURCE_DIR is defined by the most recent project() command.
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+include(CodeCoverage)
 
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_STANDARD 20)

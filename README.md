@@ -1,6 +1,6 @@
 # Beauty in Easy Math
 
-![33](examples/33.png)
+![33](doc/example/33.png)
 
 ## A Tool for Mathematical Art
 
@@ -84,14 +84,14 @@ The square of 7 is ordinarily 49.
 
 So the result might be rendered as something like this:
 
-![8](examples/8.png)
+![8](doc/example/8.png)
 
 [node]: https://en.wikipedia.org/wiki/Vertex_(graph_theory)
 [graph]: https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)
 
 ### Next, consider N = 23.
 
-![23](examples/23.png)
+![23](doc/example/23.png)
 
 ## Brief Mathematical Description
 

@@ -34,6 +34,7 @@ clean :
 	@rm -fv modgraph
 	@rm -fv *.o
 	@rm -fv texput.*
+	@rm -frv build
 
 # See
 # 'http://make.mad-scientist.net/papers/advanced-auto-dependency-generation'.
