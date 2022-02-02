@@ -1,5 +1,7 @@
 
-CXX := g++
+# WARNING: 'g++-9' is known to produce slight errors in minimized positions
+#          when '-O2' is used.
+CXX := g++-10
 CC := $(CXX)
 CXXFLAGS := -g -Wall -W -std=c++17 -O2
 LDLIBS := -lgsl

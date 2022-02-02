@@ -22,6 +22,10 @@ In order to use this tool on a unix-like machine:
 - Install [libgsl-dev](https://www.gnu.org/software/gsl).
 - Install [libeigen3-dev](https://eigen.tuxfamily.org).
 - Install a C++-compiler like `clang++` or `g++`.
+  - For `g++`, it is recommended to use `g++-10` or later.
+  - There is a known problem with `g++-9` and `-O2` optimization.
+  - In that combination, some vertices are misplaced by a small but noticeable
+    amount.
 - Install GNU `make`.
 - Clone this repository, change into the `modgraph` subdirectory, and type (for
   example) `make 33` in order to bring up a rendering of the graphs for the
@@ -234,39 +238,4 @@ arithmetic.)
 
 These attractions give almost every graph a high degree of symmetry at minimum
 potential energy.
-
-## In Progress: cmake, gsl, etc.
-
-Adding support for `cmake` is a work in progress.
-
-Also a work in progress is the adding of a C++-library
-- for GSL's vector and
-- for GSL's minimization-routines (which depends on GSL's vector).
-
-The code for this library is under the directory [gsl](gsl).
-  - The C++-interface to `gsl_vector` is implemented but not fully unit-tested.
-  - The C++-interface to the minimizers is not implemented yet.
-  - The unit-tests are built, run, and reported on for coverage by way of `cmake`.
-
-The top-level [CMakeLists.txt](CMakeLists.txt) controls only building things
-under [gsl](gsl).
-
-The top-level [Makefile](Makefile) still defaults to building the old code for
-`modgraph`, which does not yet use anything under [gsl](gsl).
-
-However, the top-level [Makefile](Makefile) does have a target, `build`, which
-generates a directory, `build` and properly invokes `cmake` there so that the
-test-code under [gsl](gsl) can be built, run, and reported on for covereage.
-
-To get started working on the new stuff:
-
-```
-$ make build
-$ cd build
-$ make tests_cov
-```
-
-After that, products of the coverage-analysis end up in
-  - `build/tests_cov.txt` and
-  - `build/tests_cov.html`.
 

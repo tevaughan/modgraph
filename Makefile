@@ -1,16 +1,10 @@
 
-.PHONY : all build clean modgraph
+.PHONY : all clean modgraph
 
-all : build modgraph
+all : modgraph
 
 modgraph:
 	(cd modgraph; make)
 
-build:
-	@rm -fr build
-	@mkdir build
-	@(cd build; CXX=clang++ cmake ..)
-
 clean :
-	@rm -frv build
 	@(cd modgraph; make clean)
